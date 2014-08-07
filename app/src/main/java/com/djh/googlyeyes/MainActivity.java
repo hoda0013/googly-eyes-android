@@ -1,14 +1,17 @@
 package com.djh.googlyeyes;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -26,6 +29,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.djh.googlyeyes.util.Util;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -38,14 +43,18 @@ import java.util.List;
 
 public class MainActivity extends Activity implements View.OnClickListener{
 
+    private static final int SELECT_PICTURE = 1;
+    private static final int SELECT_PICURE_KITKAT = 2;
     public static final int CAMERA_REQUEST_CODE = 4;
     public static final int CAMERA_RESULT_CODE = 100;
     private static final int SWIPE_MIN_DISTANCE = 90;
     private static final int SWIPE_MAX_OFF_PATH = 100;
     private static final int SWIPE_THRESHOLD_VELOCITY = 2000;
-
+    private Uri imageUri;
+    private String selectedImagePath;
     RelativeLayout mContainer;
     ImageView mImageView;
+    RelativeLayout mSnapshot;
     private Context mContext;
     private int eyeCounter = 0;
     private GooglyEyeWidget theEye = null;
@@ -62,6 +71,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
         mContainer = (RelativeLayout) findViewById(R.id.container);
         mImageView = (ImageView) findViewById(R.id.imageView);
         mImageView.setImageResource(R.drawable.ben_bg);
+        mSnapshot = (RelativeLayout) findViewById(R.id.snapshot);
+
         mContext = this;
         gestureDetector = new GestureDetector(this, new MyGestureDetector());
     }
@@ -99,9 +110,20 @@ public class MainActivity extends Activity implements View.OnClickListener{
         } else if (id == R.id.take_photo) {
             takePhoto();
         } else if (id == R.id.add_image) {
-
+            selectImageFromGallery();
         }
+//        else if (id == R.id.save_image) {
+//            saveImage();
+//        }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void saveImage() {
+
+        mSnapshot.setDrawingCacheEnabled(true);
+        mSnapshot.buildDrawingCache();
+        Bitmap savedImage = mSnapshot.getDrawingCache();
+        mImageView.setImageBitmap(savedImage);
     }
 
     private void takePhoto() {
@@ -123,6 +145,21 @@ public class MainActivity extends Activity implements View.OnClickListener{
             Toast.makeText(mContext, "External storage not detected", Toast.LENGTH_SHORT).show();
         }
     }
+
+    private void selectImageFromGallery() {
+        if(Build.VERSION.SDK_INT < 19){
+            Intent intent = new Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"), SELECT_PICTURE);
+        }else {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("image/*");
+            startActivityForResult(intent, SELECT_PICURE_KITKAT);
+        }
+    }
+
 
     private File createImageFile() throws IOException {
         // Create an image file name
@@ -217,7 +254,29 @@ public class MainActivity extends Activity implements View.OnClickListener{
             } else if(resultCode == RESULT_CANCELED){
                 Log.i("IMAGE", "CANCELLED");
             }
+        } else if (requestCode == SELECT_PICTURE){
+            if (resultCode == RESULT_OK) {
+                imageUri = data.getData();
+                showPreviewImage(imageUri);
+            } else if(resultCode == RESULT_CANCELED){
+                Log.i("IMAGE", "CANCELLED" );
+            }
+
+        } else if(requestCode == SELECT_PICURE_KITKAT){
+            if(resultCode == RESULT_OK) {
+                imageUri = data.getData();
+                makeImageUri(data, imageUri);
+                showPreviewImage(imageUri);
+            } else if(resultCode == RESULT_CANCELED){
+                Log.i("IMAGE", "CANCELLED" );
+            }
         }
+    }
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    private void makeImageUri(Intent data, Uri imageUri){
+        final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION) | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+        getContentResolver().takePersistableUriPermission(imageUri, takeFlags);
     }
 
     private static int calculateInSampleSize(
@@ -243,6 +302,43 @@ public class MainActivity extends Activity implements View.OnClickListener{
         return inSampleSize;
     }
 
+    private void showPreviewImage(Uri imageUri){
+
+        selectedImagePath = Util.getPath(this, imageUri);
+
+        //NOW WE HAVE OUR WANTED STRING
+        if (selectedImagePath!=null) {
+            Uri externalImages = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            String[] projection = {MediaStore.Images.Media._ID, MediaStore.Images.Media.ORIENTATION};
+            Cursor c = getContentResolver().query(externalImages, projection, MediaStore.Images.Media.DATA + " = ? ", new String[]{selectedImagePath}, null);
+
+            Bitmap bitmap = null;
+            if (c != null && c.moveToFirst()) {
+                int rotation = c.getInt(c.getColumnIndex(MediaStore.Images.Media.ORIENTATION));
+                try {
+                    bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (bitmap != null && rotation != 0) {
+                    Matrix matrix = new Matrix();
+                    matrix.postRotate(rotation);
+
+                    int w = bitmap.getWidth();
+                    int h = bitmap.getHeight();
+
+                    Bitmap newBitmap = Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true);
+                    bitmap.recycle();
+                    bitmap = newBitmap;
+                }
+            }
+
+            if (bitmap != null) {
+                mImageView.setImageBitmap(bitmap);
+            }
+        }
+    }
+
     private void showCameraPreviewImage() {
         if (mCameraImageUri == null) {
             // we lost something, so just fail
@@ -252,7 +348,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
         final String path = mCameraImageUri.getPath();
         Bitmap bitmap = BitmapFactory.decodeFile(path);
         mImageView.setImageBitmap(bitmap);
-        mImageView.setScaleType(ImageView.ScaleType.FIT_XY);
     }
 
     float tempX = 0.0f;

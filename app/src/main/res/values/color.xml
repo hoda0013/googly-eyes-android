@@ -4,5 +4,6 @@
     <color name="eye_white">#FFFFFF</color>
     <color name="bounding_box_handle">#FFABABAB</color>
     <color name="bg">#FF34Af9F</color>
+    <color name="image_background">#FF000000</color>
 
 </resources>

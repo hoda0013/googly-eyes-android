@@ -5,11 +5,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-    android:background="@color/bg">
+    android:background="@color/image_background">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/snapshot">
 
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/imageView"/>
+        android:id="@+id/imageView"
+        android:adjustViewBounds="true"/>
+
+    </RelativeLayout>
+    
+
 
 </RelativeLayout>
