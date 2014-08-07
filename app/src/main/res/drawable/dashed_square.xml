@@ -9,5 +9,5 @@
         android:dashGap="10dp" />
 
     <solid
-        android:color="@color/eye_bg"/>
+        android:color="@color/bounding_box"/>
 </shape>

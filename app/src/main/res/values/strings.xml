@@ -4,5 +4,6 @@
     <string name="app_name">GooglyEyes</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="eye_deleted">Eye Deleted</string>
 
 </resources>

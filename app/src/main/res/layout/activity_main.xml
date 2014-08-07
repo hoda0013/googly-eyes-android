@@ -1,25 +1,9 @@
-<AbsoluteLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:custom="http://schemas.android.com/apk/res-auto"
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-    android:background="@drawable/ben_bg"
-    android:paddingLeft="@dimen/activity_horizontal_margin">
-
-    <com.djh.googlyeyes.GooglyEyeWidget
-        android:layout_width="35dp"
-        android:layout_height="35dp"
-        android:id="@+id/rightEye"
-        android:layout_x="90dp"
-        android:layout_y="140dp" />
-
-    <com.djh.googlyeyes.GooglyEyeWidget
-        android:layout_width="35dp"
-        android:layout_height="35dp"
-        android:id="@+id/leftEye"
-        android:layout_x="30dp"
-        android:layout_y="130dp" />
-
-</AbsoluteLayout>
+    android:background="@color/bg">
+</RelativeLayout>

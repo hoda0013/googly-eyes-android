@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="eye_bg">#FAA3A3A3</color>
+    <color name="bounding_box">#FF000000</color>
     <color name="eye_white">#FFFFFF</color>
+    <color name="bounding_box_handle">#FFABABAB</color>
+    <color name="bg">#FF34Af9F</color>
 
 </resources>
