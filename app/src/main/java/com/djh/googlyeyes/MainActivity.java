@@ -72,6 +72,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
         mImageView = (ImageView) findViewById(R.id.imageView);
         mImageView.setImageResource(R.drawable.ben_bg);
         mSnapshot = (RelativeLayout) findViewById(R.id.snapshot);
+//        mSnapshot.setDrawingCacheEnabled(true);
 
         mContext = this;
         gestureDetector = new GestureDetector(this, new MyGestureDetector());
@@ -101,7 +102,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
             theEye.setOnClickListener(this);
             theEye.setOnTouchListener(gestureListener);
             listGooglyEyes.add(theEye);
-            mContainer.addView(theEye);
+            mSnapshot.addView(theEye);
             for (int i = 0; i < listGooglyEyes.size() - 1; i++) {
                 listGooglyEyes.get(i).setMode(GooglyEyeWidget.Mode.PLACED);
             }
@@ -112,18 +113,23 @@ public class MainActivity extends Activity implements View.OnClickListener{
         } else if (id == R.id.add_image) {
             selectImageFromGallery();
         }
-//        else if (id == R.id.save_image) {
-//            saveImage();
-//        }
+        else if (id == R.id.save_image) {
+            saveImage();
+        }
         return super.onOptionsItemSelected(item);
     }
 
     private void saveImage() {
 
+//        mSnapshot.buildDrawingCache();
         mSnapshot.setDrawingCacheEnabled(true);
-        mSnapshot.buildDrawingCache();
-        Bitmap savedImage = mSnapshot.getDrawingCache();
-        mImageView.setImageBitmap(savedImage);
+        Bitmap bitmap = Bitmap.createBitmap(mSnapshot.getDrawingCache());
+        mImageView.setImageBitmap(bitmap);
+        mSnapshot.destroyDrawingCache();
+
+//        savedImage.recycle();
+//        savedImage = null;
+//        mSnapshot.destroyDrawingCache();
     }
 
     private void takePhoto() {
@@ -496,7 +502,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
                     theEye.flingOffScreen(true, new Listener() {
                         @Override
                         public void animationFinished() {
-                            mContainer.removeView(theEye);
+                            mSnapshot.removeView(theEye);
                             listGooglyEyes.remove(theEye);
                         }
                     });
@@ -506,7 +512,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
                     theEye.flingOffScreen(false, new Listener() {
                         @Override
                         public void animationFinished() {
-                            mContainer.removeView(theEye);
+                            mSnapshot.removeView(theEye);
                             listGooglyEyes.remove(theEye);
                         }
                     });

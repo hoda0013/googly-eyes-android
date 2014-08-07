@@ -16,8 +16,8 @@
         android:orderInCategory="100"
         android:showAsAction="always" />
 
-    <!--<item android:id="@+id/save_image"-->
-        <!--android:title="Save"-->
-        <!--android:orderInCategory="100"-->
-        <!--android:showAsAction="always" />-->
+    <item android:id="@+id/save_image"
+        android:title="Save"
+        android:orderInCategory="100"
+        android:showAsAction="always" />
 </menu>
