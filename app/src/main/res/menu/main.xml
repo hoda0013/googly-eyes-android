@@ -5,4 +5,14 @@
         android:title="Add Eye"
         android:orderInCategory="100"
         android:showAsAction="always" />
+
+    <item android:id="@+id/take_photo"
+        android:title="Camera"
+        android:orderInCategory="100"
+        android:showAsAction="always" />
+
+    <item android:id="@+id/add_image"
+        android:title="Gallery"
+        android:orderInCategory="100"
+        android:showAsAction="always" />
 </menu>

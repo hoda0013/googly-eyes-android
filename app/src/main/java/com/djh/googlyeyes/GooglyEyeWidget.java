@@ -279,7 +279,7 @@ public boolean isTouchingBoundingBox(float eventX, float eventY) {
 
     }
 
-    public void flingOffScreen(final MainActivity.Listener listener) {
+    public void flingOffScreen(final boolean isFlingLeft, final MainActivity.Listener listener) {
         final int distance = 1000;
         ValueAnimator animator = ValueAnimator.ofFloat(0,1);
         animator.setDuration(300);
@@ -287,7 +287,13 @@ public boolean isTouchingBoundingBox(float eventX, float eventY) {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 float value = ((Float) (animation.getAnimatedValue())).floatValue();
-                boxCornerX = boxCornerX + (int) (value * distance);
+
+                if (isFlingLeft) {
+                    boxCornerX = boxCornerX - (int) (value * distance);
+
+                } else {
+                    boxCornerX = boxCornerX + (int) (value * distance);
+                }
                 invalidate();
             }
         });
