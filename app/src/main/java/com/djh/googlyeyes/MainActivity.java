@@ -206,6 +206,10 @@ public class MainActivity extends Activity implements View.OnClickListener{
     public void onClick(View v) {
     }
 
+    public interface Listener {
+        public void animationFinished();
+    }
+
     class MyGestureDetector extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
@@ -215,15 +219,23 @@ public class MainActivity extends Activity implements View.OnClickListener{
                 // right to left swipe
                 if(e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
                     Toast.makeText(mContext, getString(R.string.eye_deleted), Toast.LENGTH_SHORT).show();
-                    theEye.flingOffScreen();
-//                    mContainer.removeView(theEye);
-//                    listGooglyEyes.remove(theEye);
+                    theEye.flingOffScreen(new Listener() {
+                        @Override
+                        public void animationFinished() {
+                            mContainer.removeView(theEye);
+                            listGooglyEyes.remove(theEye);
+                        }
+                    });
 
                 }  else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
                     Toast.makeText(mContext, getString(R.string.eye_deleted), Toast.LENGTH_SHORT).show();
-                    theEye.flingOffScreen();
-//                    mContainer.removeView(theEye);
-//                    listGooglyEyes.remove(theEye);
+                    theEye.flingOffScreen(new Listener() {
+                        @Override
+                        public void animationFinished() {
+                            mContainer.removeView(theEye);
+                            listGooglyEyes.remove(theEye);
+                        }
+                    });
                 }
 
             } catch (Exception e) {
