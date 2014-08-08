@@ -313,7 +313,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
 
         selectedImagePath = Util.getPath(this, imageUri);
 
-        //NOW WE HAVE OUR WANTED STRING
         if (selectedImagePath!=null) {
             Uri externalImages = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
             String[] projection = {MediaStore.Images.Media._ID, MediaStore.Images.Media.ORIENTATION};
@@ -342,6 +341,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
 
             if (bitmap != null) {
                 mImageView.setImageBitmap(bitmap);
+                removeAllEyes();
             }
         }
     }
@@ -355,6 +355,14 @@ public class MainActivity extends Activity implements View.OnClickListener{
         final String path = mCameraImageUri.getPath();
         Bitmap bitmap = BitmapFactory.decodeFile(path);
         mImageView.setImageBitmap(bitmap);
+        removeAllEyes();
+    }
+
+    private void removeAllEyes() {
+        for (GooglyEyeWidget eye: listGooglyEyes) {
+            mImageFrame.removeView(eye);
+        }
+        listGooglyEyes.clear();
     }
 
     float tempX = 0.0f;
