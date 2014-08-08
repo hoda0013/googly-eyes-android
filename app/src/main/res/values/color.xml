@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="bounding_box">#A9BABABA</color>
+    <color name="view_divider">#A9BABABA</color>
     <color name="eye_white">#FFFFFF</color>
     <color name="bounding_box_handle">#FFA41A</color>
     <color name="bg">#FF34Af9F</color>
