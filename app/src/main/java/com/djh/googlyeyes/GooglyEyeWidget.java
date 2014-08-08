@@ -12,10 +12,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
+import android.util.TypedValue;
 import android.view.View;
-import android.widget.LinearLayout;
 
 /**
  * Created by dillonhodapp on 7/30/14.
@@ -26,7 +24,6 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     private Sensor mAccelerometer;
     private long lastTime;
     private static final long THRESHOLD_TIME = 16; //milliseconds
-    private static final int HANDLE_WIDTH = 60;
     private static final int MIN_WIDTH = 24;
 
     private Context mContext;
@@ -39,12 +36,17 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     private Rect mUpperRightHandle = new Rect();
     private Rect mLowerLeftHandle = new Rect();
     private Rect mLowerRightHandle = new Rect();
+    private Rect mDragHandleRight = new Rect();
+    private Rect mDragHandleLeft = new Rect();
     private float unitX;
     private float unitY;
 
-    private int boxWidth = 100;
-    private int boxCornerX = 100;
-    private int boxCornerY = 100;
+    private int boxWidth = 50;
+    private int boxCornerX = 50;
+    private int boxCornerY = 50;
+    private int handleWidth = 24;
+    private int dragHandleLength = 40;
+
     private Mode mMode;
 
 
@@ -62,6 +64,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
         super(context);
         mContext = context;
         init();
+        units();
     }
 
     public GooglyEyeWidget(Context context, AttributeSet attrs) {
@@ -69,35 +72,41 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
 
         mContext = context;
         init();
+        units();
     }
 
     public GooglyEyeWidget(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mContext = context;
         init();
+        units();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        int x = boxCornerX + (boxWidth + 2 * HANDLE_WIDTH) / 2;
-        int y = boxCornerY + (boxWidth + 2 * HANDLE_WIDTH) / 2;
+        int x = boxCornerX + (boxWidth + 2 * handleWidth) / 2;
+        int y = boxCornerY + (boxWidth + 2 * handleWidth) / 2;
         int pupilRadius = (boxWidth * 2000) / 6000;
 
         if (mMode != Mode.PLACED) {
             //draw bounding box
-            mBoundingRect.set(boxCornerX + HANDLE_WIDTH / 2, boxCornerY + HANDLE_WIDTH / 2, boxCornerX + HANDLE_WIDTH + boxWidth + HANDLE_WIDTH / 2, boxCornerY + HANDLE_WIDTH + boxWidth + HANDLE_WIDTH / 2);
+            mBoundingRect.set(boxCornerX + handleWidth / 2, boxCornerY + handleWidth / 2, boxCornerX + handleWidth + boxWidth + handleWidth / 2, boxCornerY + handleWidth + boxWidth + handleWidth / 2);
             canvas.drawRect(mBoundingRect, mBoundingBox);
             //draw handles
-            mUpperLeftHandle.set(boxCornerX, boxCornerY, boxCornerX + HANDLE_WIDTH, boxCornerY + HANDLE_WIDTH);
-            mUpperRightHandle.set(boxCornerX + boxWidth + HANDLE_WIDTH, boxCornerY, boxCornerX + boxWidth + 2 * HANDLE_WIDTH, boxCornerY + HANDLE_WIDTH);
-            mLowerLeftHandle.set(boxCornerX, boxCornerY + boxWidth + HANDLE_WIDTH, boxCornerX + HANDLE_WIDTH, boxCornerY + boxWidth + 2 * HANDLE_WIDTH);
-            mLowerRightHandle.set(boxCornerX + boxWidth + HANDLE_WIDTH, boxCornerY + boxWidth + HANDLE_WIDTH, boxCornerX + boxWidth + 2 * HANDLE_WIDTH, boxCornerY + boxWidth + 2 * HANDLE_WIDTH);
+            mUpperLeftHandle.set(boxCornerX, boxCornerY, boxCornerX + handleWidth, boxCornerY + handleWidth);
+            mUpperRightHandle.set(boxCornerX + boxWidth + handleWidth, boxCornerY, boxCornerX + boxWidth + 2 * handleWidth, boxCornerY + handleWidth);
+            mLowerLeftHandle.set(boxCornerX, boxCornerY + boxWidth + handleWidth, boxCornerX + handleWidth, boxCornerY + boxWidth + 2 * handleWidth);
+            mLowerRightHandle.set(boxCornerX + boxWidth + handleWidth, boxCornerY + boxWidth + handleWidth, boxCornerX + boxWidth + 2 * handleWidth, boxCornerY + boxWidth + 2 * handleWidth);
             canvas.drawRect(mUpperLeftHandle, mBoundingHandle);
             canvas.drawRect(mUpperRightHandle, mBoundingHandle);
             canvas.drawRect(mLowerLeftHandle, mBoundingHandle);
             canvas.drawRect(mLowerRightHandle, mBoundingHandle);
+            mDragHandleLeft.set(boxCornerX - dragHandleLength, boxCornerY + ((handleWidth + handleWidth + boxWidth) / 2) - (handleWidth / 2), boxCornerX - dragHandleLength + handleWidth, boxCornerY + ((handleWidth + handleWidth + boxWidth) / 2) - (handleWidth / 2) + handleWidth);
+            canvas.drawRect(mDragHandleLeft, mBoundingHandle);
+            mDragHandleRight.set(boxCornerX + (2 * handleWidth) + boxWidth + dragHandleLength - handleWidth, boxCornerY + ((handleWidth + handleWidth + boxWidth) / 2) - (handleWidth / 2), boxCornerX + (2 * handleWidth) + boxWidth + dragHandleLength, boxCornerY + ((handleWidth + handleWidth + boxWidth) / 2) - (handleWidth / 2) + handleWidth);
+            canvas.drawRect(mDragHandleRight, mBoundingHandle);
         }
 
         //draw eyeball
@@ -111,25 +120,41 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
 
     }
 
-public boolean isTouchingBoundingBox(float eventX, float eventY) {
-    if (eventX >= boxCornerX && eventX <= (boxCornerX + boxWidth + 2 * HANDLE_WIDTH)) {
-        if (eventY >= boxCornerY && eventY <= (boxCornerY + boxWidth + 2 * HANDLE_WIDTH)) {
-            if (!isTouchingUpperLeft(eventX, eventY) && !isTouchingUpperRight(eventX, eventY) && !isTouchingLowerLeft(eventX, eventY) && !isTouchingLowerRight(eventX,eventY)) {
-                return true;
+    private void units() {
+        boxCornerX = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, boxCornerX, getResources().getDisplayMetrics());
+        boxCornerY = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, boxCornerY, getResources().getDisplayMetrics());
+        boxWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, boxWidth, getResources().getDisplayMetrics());
+        handleWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, handleWidth, getResources().getDisplayMetrics());
+        dragHandleLength = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dragHandleLength, getResources().getDisplayMetrics());
+
+    }
+
+    public boolean isTouchingBoundingBox(float eventX, float eventY) {
+        if (eventX >= boxCornerX && eventX <= (boxCornerX + boxWidth + 2 * handleWidth)) {
+            if (eventY >= boxCornerY && eventY <= (boxCornerY + boxWidth + 2 * handleWidth)) {
+                if (!isTouchingUpperLeft(eventX, eventY) && !isTouchingUpperRight(eventX, eventY) && !isTouchingLowerLeft(eventX, eventY) && !isTouchingLowerRight(eventX,eventY)) {
+                    return true;
+                } else {
+                    return false;
+                }
             } else {
                 return false;
             }
         } else {
             return false;
         }
-    } else {
+    }
+
+    public boolean isTouchingDragHandle(float eventX, float eventY) {
+        if (mDragHandleLeft.contains((int)eventX, (int)eventY) || mDragHandleRight.contains((int)eventX, (int)eventY)) {
+            return true;
+        }
         return false;
     }
-}
 
     public boolean isTouchingUpperLeft(float eventX, float eventY) {
-        if (eventX >= boxCornerX && eventX <= (boxCornerX + HANDLE_WIDTH)) {
-            if (eventY >= boxCornerY && eventY <= (boxCornerY + HANDLE_WIDTH)) {
+        if (eventX >= boxCornerX && eventX <= (boxCornerX + handleWidth)) {
+            if (eventY >= boxCornerY && eventY <= (boxCornerY + handleWidth)) {
                 return true;
             } else {
                 return false;
@@ -140,8 +165,8 @@ public boolean isTouchingBoundingBox(float eventX, float eventY) {
     }
 
     public boolean isTouchingUpperRight(float eventX, float eventY) {
-        if (eventX >= (boxCornerX + boxWidth + HANDLE_WIDTH) && eventX <= (boxCornerX + boxWidth + 2 * HANDLE_WIDTH)) {
-            if (eventY >= boxCornerY && eventY <= (boxCornerY + HANDLE_WIDTH)) {
+        if (eventX >= (boxCornerX + boxWidth + handleWidth) && eventX <= (boxCornerX + boxWidth + 2 * handleWidth)) {
+            if (eventY >= boxCornerY && eventY <= (boxCornerY + handleWidth)) {
                 return true;
             } else {
                 return false;
@@ -152,8 +177,8 @@ public boolean isTouchingBoundingBox(float eventX, float eventY) {
     }
 
     public boolean isTouchingLowerLeft(float eventX, float eventY) {
-        if (eventX >= boxCornerX && eventX <= (boxCornerX + HANDLE_WIDTH)) {
-            if (eventY >= (boxCornerY + boxWidth + HANDLE_WIDTH) && eventY <= (boxCornerY + boxWidth + 2 * HANDLE_WIDTH)) {
+        if (eventX >= boxCornerX && eventX <= (boxCornerX + handleWidth)) {
+            if (eventY >= (boxCornerY + boxWidth + handleWidth) && eventY <= (boxCornerY + boxWidth + 2 * handleWidth)) {
                 return true;
             } else {
                 return false;
@@ -164,8 +189,8 @@ public boolean isTouchingBoundingBox(float eventX, float eventY) {
     }
 
     public boolean isTouchingLowerRight(float eventX, float eventY) {
-        if (eventX >= (boxCornerX + boxWidth + HANDLE_WIDTH) && eventX <= (boxCornerX + boxWidth + 2 * HANDLE_WIDTH)) {
-            if (eventY >= (boxCornerY + boxWidth + HANDLE_WIDTH) && eventY <= (boxCornerY + boxWidth + 2 * HANDLE_WIDTH)) {
+        if (eventX >= (boxCornerX + boxWidth + handleWidth) && eventX <= (boxCornerX + boxWidth + 2 * handleWidth)) {
+            if (eventY >= (boxCornerY + boxWidth + handleWidth) && eventY <= (boxCornerY + boxWidth + 2 * handleWidth)) {
                 return true;
             } else {
                 return false;

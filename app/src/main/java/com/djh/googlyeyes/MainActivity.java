@@ -50,6 +50,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
     private static final int SWIPE_MIN_DISTANCE = 90;
     private static final int SWIPE_MAX_OFF_PATH = 100;
     private static final int SWIPE_THRESHOLD_VELOCITY = 2000;
+
     private Uri imageUri;
     private String selectedImagePath;
     RelativeLayout mContainer;
@@ -398,7 +399,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
                             theEye = eye;
                             theEye.setMode(GooglyEyeWidget.Mode.RESIZING_LOWER_RIGHT);
                             clearOtherEyes(theEye.getId());
-                        } else if(eye.isTouchingBoundingBox(eventX, eventY)){
+                        } else if(eye.isTouchingBoundingBox(eventX, eventY) || eye.isTouchingDragHandle(eventX, eventY)){
                             theEye = eye;
                             theEye.setMode(GooglyEyeWidget.Mode.DRAGGING);
                             clearOtherEyes(theEye.getId());
