@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bounding_box">#FF000000</color>
+    <color name="bounding_box">#A9BABABA</color>
     <color name="eye_white">#FFFFFF</color>
-    <color name="bounding_box_handle">#FFABABAB</color>
+    <color name="bounding_box_handle">#FFA41A</color>
     <color name="bg">#FF34Af9F</color>
     <color name="image_background">#FF000000</color>
+    <color name="transparent">#00000000</color>
 
 </resources>

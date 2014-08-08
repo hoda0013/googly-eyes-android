@@ -4,7 +4,9 @@ import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -24,29 +26,25 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     private Sensor mAccelerometer;
     private long lastTime;
     private static final long THRESHOLD_TIME = 16; //milliseconds
-    private static final int MIN_WIDTH = 24;
+    private static final int MIN_WIDTH = 200;
 
     private Context mContext;
     private Paint mSclera;
     private Paint mPupil;
     private Paint mBoundingHandle;
     private Paint mBoundingBox;
+    private Paint mClearPaint;
     private Rect mBoundingRect = new Rect();
-    private Rect mUpperLeftHandle = new Rect();
-    private Rect mUpperRightHandle = new Rect();
-    private Rect mLowerLeftHandle = new Rect();
     private Rect mLowerRightHandle = new Rect();
-    private Rect mDragHandleRight = new Rect();
-    private Rect mDragHandleLeft = new Rect();
+    private Path mLowerRightTriangle = new Path();
+    private Matrix translateMatrix = new Matrix();
     private float unitX;
     private float unitY;
 
-    private int boxWidth = 50;
+    private int boxWidth = 100;
     private int boxCornerX = 50;
     private int boxCornerY = 50;
     private int handleWidth = 24;
-    private int dragHandleLength = 40;
-
     private Mode mMode;
 
 
@@ -86,32 +84,27 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        int x = boxCornerX + (boxWidth + 2 * handleWidth) / 2;
-        int y = boxCornerY + (boxWidth + 2 * handleWidth) / 2;
-        int pupilRadius = (boxWidth * 2000) / 6000;
+        int x = boxCornerX + (boxWidth / 2);
+        int y = boxCornerY + (boxWidth / 2);
+        int scleraRadius = (boxWidth - (2 * handleWidth)) / 2;
+        int pupilRadius = (scleraRadius * 2000) / 3000;
 
         if (mMode != Mode.PLACED) {
             //draw bounding box
-            mBoundingRect.set(boxCornerX + handleWidth / 2, boxCornerY + handleWidth / 2, boxCornerX + handleWidth + boxWidth + handleWidth / 2, boxCornerY + handleWidth + boxWidth + handleWidth / 2);
+            mBoundingRect.set(boxCornerX, boxCornerY, boxCornerX + boxWidth, boxCornerY + boxWidth);
             canvas.drawRect(mBoundingRect, mBoundingBox);
-            //draw handles
-            mUpperLeftHandle.set(boxCornerX, boxCornerY, boxCornerX + handleWidth, boxCornerY + handleWidth);
-            mUpperRightHandle.set(boxCornerX + boxWidth + handleWidth, boxCornerY, boxCornerX + boxWidth + 2 * handleWidth, boxCornerY + handleWidth);
-            mLowerLeftHandle.set(boxCornerX, boxCornerY + boxWidth + handleWidth, boxCornerX + handleWidth, boxCornerY + boxWidth + 2 * handleWidth);
-            mLowerRightHandle.set(boxCornerX + boxWidth + handleWidth, boxCornerY + boxWidth + handleWidth, boxCornerX + boxWidth + 2 * handleWidth, boxCornerY + boxWidth + 2 * handleWidth);
-            canvas.drawRect(mUpperLeftHandle, mBoundingHandle);
-            canvas.drawRect(mUpperRightHandle, mBoundingHandle);
-            canvas.drawRect(mLowerLeftHandle, mBoundingHandle);
-            canvas.drawRect(mLowerRightHandle, mBoundingHandle);
-            mDragHandleLeft.set(boxCornerX - dragHandleLength, boxCornerY + ((handleWidth + handleWidth + boxWidth) / 2) - (handleWidth / 2), boxCornerX - dragHandleLength + handleWidth, boxCornerY + ((handleWidth + handleWidth + boxWidth) / 2) - (handleWidth / 2) + handleWidth);
-            canvas.drawRect(mDragHandleLeft, mBoundingHandle);
-            mDragHandleRight.set(boxCornerX + (2 * handleWidth) + boxWidth + dragHandleLength - handleWidth, boxCornerY + ((handleWidth + handleWidth + boxWidth) / 2) - (handleWidth / 2), boxCornerX + (2 * handleWidth) + boxWidth + dragHandleLength, boxCornerY + ((handleWidth + handleWidth + boxWidth) / 2) - (handleWidth / 2) + handleWidth);
-            canvas.drawRect(mDragHandleRight, mBoundingHandle);
+            //draw touch box in lower right corner
+            mLowerRightHandle.set(boxCornerX + boxWidth - handleWidth, boxCornerY + boxWidth - handleWidth, boxCornerX + boxWidth, boxCornerY + boxWidth);
+            canvas.drawRect(mLowerRightHandle, mClearPaint);
+            //draw triangle in lower right corner
+            mLowerRightTriangle.reset();
+            updatePath();
+            canvas.drawPath(mLowerRightTriangle, mBoundingHandle);
         }
 
         //draw eyeball
-        canvas.drawCircle(x, y, boxWidth / 2, mSclera);
-        canvas.drawCircle(x + (unitX * (boxWidth / 2 - pupilRadius)),  y + (unitY * (boxWidth / 2 - pupilRadius)), pupilRadius, mPupil);
+        canvas.drawCircle(x, y, scleraRadius, mSclera);
+        canvas.drawCircle(x + (unitX * (scleraRadius - pupilRadius)),  y + (unitY * (scleraRadius - pupilRadius)), pupilRadius, mPupil);
     }
 
     @Override
@@ -120,41 +113,32 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
 
     }
 
+    private void updatePath() {
+
+        mLowerRightTriangle.moveTo(boxCornerX + boxWidth, boxCornerY + boxWidth);
+        mLowerRightTriangle.lineTo(boxCornerX + boxWidth, boxCornerY + boxWidth - handleWidth);
+        mLowerRightTriangle.lineTo(boxCornerX + boxWidth - handleWidth, boxCornerY + boxWidth);
+        mLowerRightTriangle.lineTo(boxCornerX + boxWidth, boxCornerY + boxWidth);
+        mLowerRightTriangle.close();
+    }
+
     private void units() {
         boxCornerX = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, boxCornerX, getResources().getDisplayMetrics());
         boxCornerY = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, boxCornerY, getResources().getDisplayMetrics());
         boxWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, boxWidth, getResources().getDisplayMetrics());
         handleWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, handleWidth, getResources().getDisplayMetrics());
-        dragHandleLength = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dragHandleLength, getResources().getDisplayMetrics());
-
     }
 
-    public boolean isTouchingBoundingBox(float eventX, float eventY) {
-        if (eventX >= boxCornerX && eventX <= (boxCornerX + boxWidth + 2 * handleWidth)) {
-            if (eventY >= boxCornerY && eventY <= (boxCornerY + boxWidth + 2 * handleWidth)) {
-                if (!isTouchingUpperLeft(eventX, eventY) && !isTouchingUpperRight(eventX, eventY) && !isTouchingLowerLeft(eventX, eventY) && !isTouchingLowerRight(eventX,eventY)) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-
-    public boolean isTouchingDragHandle(float eventX, float eventY) {
-        if (mDragHandleLeft.contains((int)eventX, (int)eventY) || mDragHandleRight.contains((int)eventX, (int)eventY)) {
+    public boolean isTouchingDragPoint(float eventX, float eventY) {
+        if (mBoundingRect.contains((int)eventX, (int)eventY) && !mLowerRightHandle.contains((int)eventX, (int)eventY)) {
             return true;
         }
         return false;
     }
 
-    public boolean isTouchingUpperLeft(float eventX, float eventY) {
-        if (eventX >= boxCornerX && eventX <= (boxCornerX + handleWidth)) {
-            if (eventY >= boxCornerY && eventY <= (boxCornerY + handleWidth)) {
+    public boolean isTouchingSclera(float eventX, float eventY) {
+        if (eventX >= boxCornerX + handleWidth && eventX <= boxCornerX + boxWidth - handleWidth) {
+            if (eventY >= boxCornerY + handleWidth && eventY <= boxCornerY + boxWidth - handleWidth) {
                 return true;
             } else {
                 return false;
@@ -164,40 +148,11 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
         }
     }
 
-    public boolean isTouchingUpperRight(float eventX, float eventY) {
-        if (eventX >= (boxCornerX + boxWidth + handleWidth) && eventX <= (boxCornerX + boxWidth + 2 * handleWidth)) {
-            if (eventY >= boxCornerY && eventY <= (boxCornerY + handleWidth)) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
+    public boolean isTouchingResizer(float eventX, float eventY) {
+        if (mLowerRightHandle.contains((int)eventX, (int)eventY)) {
+            return true;
         }
-    }
-
-    public boolean isTouchingLowerLeft(float eventX, float eventY) {
-        if (eventX >= boxCornerX && eventX <= (boxCornerX + handleWidth)) {
-            if (eventY >= (boxCornerY + boxWidth + handleWidth) && eventY <= (boxCornerY + boxWidth + 2 * handleWidth)) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-
-    public boolean isTouchingLowerRight(float eventX, float eventY) {
-        if (eventX >= (boxCornerX + boxWidth + handleWidth) && eventX <= (boxCornerX + boxWidth + 2 * handleWidth)) {
-            if (eventY >= (boxCornerY + boxWidth + handleWidth) && eventY <= (boxCornerY + boxWidth + 2 * handleWidth)) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
+        return false;
     }
 
     public void setMode(Mode mode) {
@@ -211,32 +166,6 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     public void setDraggingCoords(int x, int y) {
         boxCornerX = boxCornerX + x;
         boxCornerY = boxCornerY + y;
-        invalidate();
-    }
-
-    public void resizeUpperLeft(int delta) {
-        if ((boxWidth - delta) > MIN_WIDTH) {
-            boxCornerX = boxCornerX + delta;
-            boxCornerY = boxCornerY + delta;
-            boxWidth = boxWidth - delta;
-        }
-        invalidate();
-    }
-
-    public void resizeUpperRight(int delta) {
-        if ((boxWidth + delta) > MIN_WIDTH) {
-            boxWidth = boxWidth + delta;
-            boxCornerY = boxCornerY - delta;
-        }
-        invalidate();
-    }
-
-    public void resizeLowerLeft(int delta) {
-
-        if ((boxWidth - delta) > MIN_WIDTH) {
-            boxWidth = boxWidth - delta;
-            boxCornerX = boxCornerX + delta;
-        }
         invalidate();
     }
 
@@ -257,7 +186,8 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
         mPupil = new Paint(Paint.ANTI_ALIAS_FLAG);
         mBoundingHandle = new Paint(Paint.ANTI_ALIAS_FLAG);
         mBoundingBox = new Paint(Paint.ANTI_ALIAS_FLAG);
-
+        mClearPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mClearPaint.setColor(getResources().getColor(R.color.transparent));
         mSclera.setColor(getResources().getColor(android.R.color.white));
         mPupil.setColor(getResources().getColor(android.R.color.black));
         mSclera.setStyle(Paint.Style.FILL);
@@ -265,8 +195,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
         mBoundingHandle.setColor(getResources().getColor(R.color.bounding_box_handle));
         mBoundingBox.setColor(getResources().getColor(R.color.bounding_box));
         mBoundingHandle.setStyle(Paint.Style.FILL);
-        mBoundingBox.setStyle(Paint.Style.STROKE);
-
+        mBoundingBox.setStyle(Paint.Style.FILL_AND_STROKE);
 
         invalidate();
     }

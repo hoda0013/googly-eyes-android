@@ -368,6 +368,15 @@ public class MainActivity extends Activity implements View.OnClickListener{
         public void animationFinished();
     }
 
+    private boolean areAnyHighlighted() {
+        for (GooglyEyeWidget eye : listGooglyEyes) {
+            if (eye.getMode() != GooglyEyeWidget.Mode.PLACED) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     View.OnTouchListener gestureListener = new View.OnTouchListener() {
         public boolean onTouch(View v, MotionEvent event) {
 
@@ -382,24 +391,17 @@ public class MainActivity extends Activity implements View.OnClickListener{
                     Log.e("XTOUCH", String.valueOf(eventX));
                     Log.e("YTOUCH", String.valueOf(eventY));
 
+
                     for (GooglyEyeWidget eye : listGooglyEyes) {
-                        if (eye.isTouchingUpperLeft(eventX, eventY)) {
-                            theEye = eye;
-                            theEye.setMode(GooglyEyeWidget.Mode.RESIZING_UPPER_LEFT);
-                            clearOtherEyes(theEye.getId());
-                        } else if (eye.isTouchingUpperRight(eventX, eventY)) {
-                            theEye = eye;
-                            theEye.setMode(GooglyEyeWidget.Mode.RESIZING_UPPER_RIGHT);
-                            clearOtherEyes(theEye.getId());
-                        } else if(eye.isTouchingLowerLeft(eventX, eventY)) {
-                            theEye = eye;
-                            theEye.setMode(GooglyEyeWidget.Mode.RESIZING_LOWER_LEFT);
-                            clearOtherEyes(theEye.getId());
-                        } else if(eye.isTouchingLowerRight(eventX, eventY)) {
+                        if(eye.isTouchingResizer(eventX, eventY) && eye.getMode() != GooglyEyeWidget.Mode.PLACED) {
                             theEye = eye;
                             theEye.setMode(GooglyEyeWidget.Mode.RESIZING_LOWER_RIGHT);
                             clearOtherEyes(theEye.getId());
-                        } else if(eye.isTouchingBoundingBox(eventX, eventY) || eye.isTouchingDragHandle(eventX, eventY)){
+                        } else if(eye.isTouchingDragPoint(eventX, eventY) && eye.getMode() != GooglyEyeWidget.Mode.PLACED){
+                            theEye = eye;
+                            theEye.setMode(GooglyEyeWidget.Mode.DRAGGING);
+                            clearOtherEyes(theEye.getId());
+                        } else if (eye.isTouchingSclera(eventX, eventY)) {
                             theEye = eye;
                             theEye.setMode(GooglyEyeWidget.Mode.DRAGGING);
                             clearOtherEyes(theEye.getId());
@@ -423,47 +425,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
 
                         theEye.setDraggingCoords(deltaX, deltaY);
 
-                        tempX = eventX;
-                        tempY = eventY;
-                    } else if (theEye != null && theEye.getMode() == GooglyEyeWidget.Mode.RESIZING_UPPER_LEFT) {
-                        int deltaX = (int) (eventX - tempX);
-                        int deltaY = (int) (eventY - tempY);
-                        int delta = 0;
-
-                        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                            delta = deltaY;
-                        } else {
-                            delta = deltaX;
-                        }
-
-                        theEye.resizeUpperLeft(delta);
-                        tempX = eventX;
-                        tempY = eventY;
-                    } else if (theEye != null && theEye.getMode() == GooglyEyeWidget.Mode.RESIZING_UPPER_RIGHT) {
-                        int deltaX = (int) (eventX - tempX);
-                        int deltaY = (int) (eventY + tempY);
-                        int delta = 0;
-
-                        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                            delta = deltaY;
-                        } else {
-                            delta = deltaX;
-                        }
-
-                        theEye.resizeUpperRight(delta);
-                        tempX = eventX;
-                        tempY = eventY;
-                    } else if (theEye != null && theEye.getMode() == GooglyEyeWidget.Mode.RESIZING_LOWER_LEFT) {
-                        int deltaX = (int) (eventX - tempX);
-                        int deltaY = (int) (eventY + tempY);
-                        int delta = 0;
-
-                        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                            delta = deltaY;
-                        } else {
-                            delta = deltaX;
-                        }
-                        theEye.resizeLowerLeft(delta);
                         tempX = eventX;
                         tempY = eventY;
                     } else if (theEye != null && theEye.getMode() == GooglyEyeWidget.Mode.RESIZING_LOWER_RIGHT) {
