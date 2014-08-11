@@ -337,20 +337,20 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
 
         if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             double x = sensorEvent.values[0];
-            double y = sensorEvent.values[1];
+            double z = sensorEvent.values[2];
 
             long currentTime = System.currentTimeMillis();
 
             if (currentTime - lastTime > THRESHOLD_TIME) {
                 //get vector magnitude
-                double magnitude = Math.sqrt((x * x) + (y * y));
+                double magnitude = Math.sqrt((x * x) + (z * z));
                 //create unit vector components
                 x = x / magnitude;
-                y  = y / magnitude;
+                z  = z / magnitude;
                 //scale vectors
 
                 unitX = (float) -x;
-                unitY = (float) y;
+                unitY = (float) z;
 
                 lastTime = currentTime;
                 invalidate();
