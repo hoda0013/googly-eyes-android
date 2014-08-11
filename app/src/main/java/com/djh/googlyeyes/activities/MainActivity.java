@@ -31,6 +31,7 @@ import com.djh.googlyeyes.fragments.ImageSourcePicker;
 import com.djh.googlyeyes.widgets.GooglyEyeWidget;
 import com.djh.googlyeyes.R;
 import com.djh.googlyeyes.util.Util;
+import com.djh.googlyeyes.widgets.Optometrist;
 import com.djh.googlyeyes.widgets.TouchImageView;
 
 import java.io.File;
@@ -49,9 +50,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
     private static final int SELECT_PICURE_KITKAT = 2;
     public static final int CAMERA_REQUEST_CODE = 4;
     public static final int CAMERA_RESULT_CODE = 100;
-    private static final int SWIPE_MIN_DISTANCE = 90;
-    private static final int SWIPE_MAX_OFF_PATH = 100;
-    private static final int SWIPE_THRESHOLD_VELOCITY = 2000;
+
 
     private Uri imageUri;
     private String selectedImagePath;
@@ -67,7 +66,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
     private GooglyEyeWidget theEye = null;
     private Uri mCameraImageUri = null;
 
-    private List<GooglyEyeWidget> listGooglyEyes = new ArrayList<GooglyEyeWidget>();
+//    private List<GooglyEyeWidget> listGooglyEyes = new ArrayList<GooglyEyeWidget>();
 
     private GestureDetector gestureDetector;
     private ImageSourcePicker.Listener imageSourcePickerListener = new ImageSourcePicker.Listener() {
@@ -98,7 +97,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
         mChangeBackgroundButton.setOnClickListener(this);
         mTakeSnapshotButton.setOnClickListener(this);
         mContext = this;
-        gestureDetector = new GestureDetector(this, new MyGestureDetector());
     }
 
     @Override
@@ -321,7 +319,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
 
             if (bitmap != null) {
                 mImageView.setImageBitmap(bitmap);
-                removeAllEyes();
+//                removeAllEyes();
             }
         }
     }
@@ -335,15 +333,15 @@ public class MainActivity extends Activity implements View.OnClickListener{
         final String path = mCameraImageUri.getPath();
         Bitmap bitmap = BitmapFactory.decodeFile(path);
         mImageView.setImageBitmap(bitmap);
-        removeAllEyes();
+//        removeAllEyes();
     }
 
-    private void removeAllEyes() {
-        for (GooglyEyeWidget eye: listGooglyEyes) {
-            mImageFrame.removeView(eye);
-        }
-        listGooglyEyes.clear();
-    }
+//    private void removeAllEyes() {
+//        for (GooglyEyeWidget eye: listGooglyEyes) {
+//            mImageFrame.removeView(eye);
+//        }
+//        listGooglyEyes.clear();
+//    }
 
     float tempX = 0.0f;
     float tempY = 0.0f;
@@ -376,161 +374,13 @@ public class MainActivity extends Activity implements View.OnClickListener{
     }
 
     private void addEye() {
-        //If there's an eye in focus, change it to PLACED
-        if (theEye != null) {
-            theEye.setMode(GooglyEyeWidget.Mode.PLACED);
-        }
         //create new eye and set listeners
-        theEye = new GooglyEyeWidget(this);
-        theEye.setId(eyeCounter++);
-//        theEye.setOnClickListener(this);
-//        theEye.setOnTouchListener(gestureListener);
-        listGooglyEyes.add(theEye);
-        mImageFrame.addView(theEye);
-        for (int i = 0; i < listGooglyEyes.size() - 1; i++) {
-            listGooglyEyes.get(i).setMode(GooglyEyeWidget.Mode.PLACED);
-        }
-        theEye.setMode(GooglyEyeWidget.Mode.EDITING);
-    }
-
-
-
-
-    public interface Listener {
-        public void animationFinished();
-    }
-
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        return super.dispatchTouchEvent(ev);
-    }
-
-    View.OnTouchListener gestureListener = new View.OnTouchListener() {
-
-        public boolean onTouch(View v, MotionEvent event) {
-
-            float eventX = event.getX();
-            float eventY = event.getY();
-
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    tempX = eventX;
-                    tempY = eventY;
-
-                    Log.e("XTOUCH", String.valueOf(eventX));
-                    Log.e("YTOUCH", String.valueOf(eventY));
-
-
-                    for (GooglyEyeWidget eye : listGooglyEyes) {
-                        if(eye.isTouchingResizer(eventX, eventY) && eye.getMode() != GooglyEyeWidget.Mode.PLACED) {
-                            theEye = eye;
-                            theEye.setMode(GooglyEyeWidget.Mode.RESIZING_LOWER_RIGHT);
-                            clearOtherEyes(theEye.getId());
-                        } else if(eye.isTouchingDragPoint(eventX, eventY) && eye.getMode() != GooglyEyeWidget.Mode.PLACED){
-                            theEye = eye;
-                            theEye.setMode(GooglyEyeWidget.Mode.DRAGGING);
-                            clearOtherEyes(theEye.getId());
-                        } else if (eye.isTouchingSclera(eventX, eventY)) {
-                            theEye = eye;
-                            theEye.setMode(GooglyEyeWidget.Mode.DRAGGING);
-                            clearOtherEyes(theEye.getId());
-                        } else {
-                            //touch event did not hit the eye
-                            eye.setMode(GooglyEyeWidget.Mode.PLACED);
-                            if (theEye != null) {
-                                if (eye.getId() == theEye.getId()) {
-                                    theEye = null;
-                                }
-
-                            }
-                        }
-                    }
-
-                    break;
-
-                case MotionEvent.ACTION_MOVE:
-                    if (theEye != null && theEye.getMode() == GooglyEyeWidget.Mode.DRAGGING) {
-                        int deltaX = (int) (eventX - tempX);
-                        int deltaY = (int) (eventY - tempY);
-
-                        theEye.setDraggingCoords(deltaX, deltaY);
-
-                        tempX = eventX;
-                        tempY = eventY;
-                    } else if (theEye != null && theEye.getMode() == GooglyEyeWidget.Mode.RESIZING_LOWER_RIGHT) {
-                        int deltaX = (int) (eventX - tempX);
-                        int deltaY = (int) (eventY - tempY);
-                        int delta = 0;
-
-                        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                            delta = deltaY;
-                        } else {
-                            delta = deltaX;
-                        }
-                        theEye.resizeLowerRight(delta);
-                        tempX = eventX;
-                        tempY = eventY;
-                    } else {
-                    }
-                    break;
-                case MotionEvent.ACTION_UP:
-                    if (theEye != null) {
-                        theEye.setMode(GooglyEyeWidget.Mode.EDITING);
-                    }
-                    break;
-
-
+        GooglyEyeWidget eye = Optometrist.INSTANCE.makeEye(this, new GooglyEyeWidget.Listener() {
+            @Override
+            public void removeView(GooglyEyeWidget eye) {
+                mImageFrame.removeView(eye);
             }
-
-            gestureDetector.onTouchEvent(event);
-            return false;
-        }
-    };
-
-    class MyGestureDetector extends GestureDetector.SimpleOnGestureListener {
-        @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            try {
-                if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
-                    return false;
-                // right to left swipe
-                if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                    Toast.makeText(mContext, getString(R.string.eye_deleted), Toast.LENGTH_SHORT).show();
-                    theEye.flingOffScreen(true, new Listener() {
-                        @Override
-                        public void animationFinished() {
-                            mImageFrame.removeView(theEye);
-                            listGooglyEyes.remove(theEye);
-                        }
-                    });
-
-                } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                    Toast.makeText(mContext, getString(R.string.eye_deleted), Toast.LENGTH_SHORT).show();
-                    theEye.flingOffScreen(false, new Listener() {
-                        @Override
-                        public void animationFinished() {
-                            mImageFrame.removeView(theEye);
-                            listGooglyEyes.remove(theEye);
-                        }
-                    });
-                }
-            } catch (Exception e) {
-
-            }
-            return false;
-        }
-
-        @Override
-        public boolean onDown(MotionEvent e) {
-            return true;
-        }
-    }
-
-    private void clearOtherEyes(int id) {
-        for (GooglyEyeWidget eye : listGooglyEyes) {
-            if (eye.getId() != id) {
-                eye.setMode(GooglyEyeWidget.Mode.PLACED);
-            }
-        }
+        });
+        mImageFrame.addView(eye);
     }
 }

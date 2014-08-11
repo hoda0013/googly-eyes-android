@@ -15,11 +15,12 @@ import android.hardware.SensorManager;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import com.djh.googlyeyes.R;
-import com.djh.googlyeyes.activities.MainActivity;
 
 /**
  * Created by dillonhodapp on 7/30/14.
@@ -33,6 +34,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     private static final int MIN_WIDTH = 200;
 
     private Context mContext;
+    private GooglyEyeWidget thisEye = this;
     private Paint mSclera;
     private Paint mPupil;
     private Paint mBoundingHandle;
@@ -44,6 +46,9 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     private Matrix translateMatrix = new Matrix();
     private float unitX;
     private float unitY;
+    private GestureDetector gestureDetector;
+    private int id;
+    private Listener mListener;
 
     private int boxWidth = 100;
     private int boxCornerX = 50;
@@ -51,6 +56,9 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     private int handleWidth = 24;
     private Mode mMode;
 
+    public interface Listener {
+        public void removeView(GooglyEyeWidget eye);
+    }
 
     public enum Mode {
         DRAGGING,
@@ -71,7 +79,6 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
 
     public GooglyEyeWidget(Context context, AttributeSet attrs) {
         super(context, attrs);
-
         mContext = context;
         init();
         units();
@@ -84,13 +91,17 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
         units();
     }
 
+    public void setListener(Listener listener) {
+        mListener = listener;
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
         int x = boxCornerX + (boxWidth / 2);
         int y = boxCornerY + (boxWidth / 2);
-        int scleraRadius = (boxWidth - (2 * handleWidth)) / 2;
+        int scleraRadius = (boxWidth - (handleWidth)) / 2;
         int pupilRadius = (scleraRadius * 2000) / 3000;
 
         if (mMode != Mode.PLACED) {
@@ -114,7 +125,6 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
     }
 
     private void updatePath() {
@@ -180,19 +190,116 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
         invalidate();
     }
 
+    float tempX = 0.0f;
+    float tempY = 0.0f;
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-//        return super.onTouchEvent(event);
-        if (mBoundingRect.contains((int)event.getX(), (int)event.getY())) {
-            Log.e("BOXTOUCHED", "TRUE");
-            return true;
-        } else {
-            Log.e("BOXTOUCHED", "FALSE");
+
+            Log.e(String.format("BOX: %s", this.getId()), "TRUE");
+            float eventX = event.getX();
+            float eventY = event.getY();
+
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    tempX = eventX;
+                    tempY = eventY;
+
+                    Log.e("XTOUCH", String.valueOf(eventX));
+                    Log.e("YTOUCH", String.valueOf(eventY));
+
+                    if (isTouchingResizer(eventX, eventY) && getMode() != GooglyEyeWidget.Mode.PLACED) {
+                        setMode(GooglyEyeWidget.Mode.RESIZING_LOWER_RIGHT);
+                        gestureDetector.onTouchEvent(event);
+                    } else if (isTouchingDragPoint(eventX, eventY) && getMode() != GooglyEyeWidget.Mode.PLACED) {
+                        setMode(GooglyEyeWidget.Mode.DRAGGING);
+                        gestureDetector.onTouchEvent(event);
+                    } else if (isTouchingSclera(eventX, eventY)) {
+                        setMode(GooglyEyeWidget.Mode.DRAGGING);
+                        Optometrist.INSTANCE.getFocus(getId());
+                        gestureDetector.onTouchEvent(event);
+                    } else {
+                        //touch event did not hit the eye
+                        setMode(GooglyEyeWidget.Mode.PLACED);
+                        return false;
+                    }
+                    return true;
+
+                case MotionEvent.ACTION_MOVE:
+                    if (getMode() == GooglyEyeWidget.Mode.DRAGGING) {
+                        int deltaX = (int) (eventX - tempX);
+                        int deltaY = (int) (eventY - tempY);
+
+                        setDraggingCoords(deltaX, deltaY);
+
+                        tempX = eventX;
+                        tempY = eventY;
+                        gestureDetector.onTouchEvent(event);
+                        return true;
+                    } else if (getMode() == GooglyEyeWidget.Mode.RESIZING_LOWER_RIGHT) {
+                        int deltaX = (int) (eventX - tempX);
+                        int deltaY = (int) (eventY - tempY);
+                        int delta = 0;
+
+                        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                            delta = deltaY;
+                        } else {
+                            delta = deltaX;
+                        }
+                        resizeLowerRight(delta);
+                        tempX = eventX;
+                        tempY = eventY;
+                        gestureDetector.onTouchEvent(event);
+                        return true;
+                    } else {
+                        return false;
+                    }
+                case MotionEvent.ACTION_UP:
+                    setMode(GooglyEyeWidget.Mode.EDITING);
+                    gestureDetector.onTouchEvent(event);
+                    return true;
+
+                default:
+                    return false;
+
+            }
+
+
+    }
+
+    class MyGestureDetector extends GestureDetector.SimpleOnGestureListener {
+        private static final int SWIPE_MIN_DISTANCE = 90;
+        private static final int SWIPE_MAX_OFF_PATH = 100;
+        private static final int SWIPE_THRESHOLD_VELOCITY = 2000;
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            try {
+                if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
+                    return false;
+                // right to left swipe
+                if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                    Toast.makeText(mContext, getResources().getString(R.string.eye_deleted), Toast.LENGTH_SHORT).show();
+                    flingOffScreen(true);
+                } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                    Toast.makeText(mContext, getResources().getString(R.string.eye_deleted), Toast.LENGTH_SHORT).show();
+                    flingOffScreen(false);
+                }
+            } catch (Exception e) {
+
+            }
             return false;
+        }
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return true;
         }
     }
 
     private void init() {
+        id = this.getId();
+        gestureDetector = new GestureDetector(mContext, new MyGestureDetector());
         mMode = Mode.EDITING;
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -249,7 +356,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
 
     }
 
-    public void flingOffScreen(final boolean isFlingLeft, final MainActivity.Listener listener) {
+    public void flingOffScreen(final boolean isFlingLeft) {
         final int distance = 1000;
         ValueAnimator animator = ValueAnimator.ofFloat(0,1);
         animator.setDuration(300);
@@ -276,7 +383,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
             @Override
             public void onAnimationEnd(Animator animation) {
                 Log.e("DONE", "DONE");
-                listener.animationFinished();
+                mListener.removeView(thisEye);
             }
 
             @Override
