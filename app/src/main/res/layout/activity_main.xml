@@ -8,16 +8,21 @@
     android:background="@color/image_background">
 
     <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/snapshot"
-        android:layout_above="@+id/buttonContainer">
-
-    <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/imageView"
-        android:adjustViewBounds="true"/>
+        android:id="@+id/imageFrame"
+        android:layout_above="@+id/buttonContainer">
+
+    <com.djh.googlyeyes.widgets.TouchImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/imageView"/>
+
+    <!--<ImageView-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:id="@+id/imageView"-->
+        <!--android:adjustViewBounds="true"/>-->
 
     </RelativeLayout>
 
@@ -28,23 +33,27 @@
         android:id="@+id/buttonContainer"
         android:layout_alignParentBottom="true">
 
-        <ImageButton
+        <Button
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:id="@+id/addEye"/>
+            android:id="@+id/addEye"
+            android:text="+ EYE"/>
 
-        <ImageButton
+        <Button
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:id="@+id/changeBackground"/>
+            android:id="@+id/changeBackground"
+            android:text="CHANGE IMAGE"
+            />
 
-        <ImageButton
+        <Button
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:id="@+id/takeSnapshot"/>
+            android:id="@+id/takeSnapshot"
+            android:text="FREEZE"/>
 
 
     </LinearLayout>

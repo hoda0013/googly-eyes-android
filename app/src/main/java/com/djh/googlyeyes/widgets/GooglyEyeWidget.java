@@ -15,6 +15,7 @@ import android.hardware.SensorManager;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.MotionEvent;
 import android.view.View;
 
 import com.djh.googlyeyes.R;
@@ -177,6 +178,18 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
             boxWidth = boxWidth + delta;
         }
         invalidate();
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+//        return super.onTouchEvent(event);
+        if (mBoundingRect.contains((int)event.getX(), (int)event.getY())) {
+            Log.e("BOXTOUCHED", "TRUE");
+            return true;
+        } else {
+            Log.e("BOXTOUCHED", "FALSE");
+            return false;
+        }
     }
 
     private void init() {

@@ -21,6 +21,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -30,6 +31,7 @@ import com.djh.googlyeyes.fragments.ImageSourcePicker;
 import com.djh.googlyeyes.widgets.GooglyEyeWidget;
 import com.djh.googlyeyes.R;
 import com.djh.googlyeyes.util.Util;
+import com.djh.googlyeyes.widgets.TouchImageView;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -54,11 +56,11 @@ public class MainActivity extends Activity implements View.OnClickListener{
     private Uri imageUri;
     private String selectedImagePath;
     RelativeLayout mContainer;
-    ImageView mImageView;
+    TouchImageView mImageView;
     RelativeLayout mImageFrame;
-    ImageButton mAddEyeButton;
-    ImageButton mChangeBackgroundButton;
-    ImageButton mTakeSnapshotButton;
+    Button mAddEyeButton;
+    Button mChangeBackgroundButton;
+    Button mTakeSnapshotButton;
 
     private Context mContext;
     private int eyeCounter = 0;
@@ -68,7 +70,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
     private List<GooglyEyeWidget> listGooglyEyes = new ArrayList<GooglyEyeWidget>();
 
     private GestureDetector gestureDetector;
-
     private ImageSourcePicker.Listener imageSourcePickerListener = new ImageSourcePicker.Listener() {
         @Override
         public void onTakePhotoSelected() {
@@ -86,16 +87,16 @@ public class MainActivity extends Activity implements View.OnClickListener{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mContainer = (RelativeLayout) findViewById(R.id.container);
-        mImageView = (ImageView) findViewById(R.id.imageView);
+        mImageView = (TouchImageView) findViewById(R.id.imageView);
         mImageView.setImageResource(R.drawable.ben_bg);
-        mImageFrame = (RelativeLayout) findViewById(R.id.snapshot);
-        mAddEyeButton = (ImageButton) findViewById(R.id.addEye);
-        mChangeBackgroundButton = (ImageButton) findViewById(R.id.changeBackground);
-        mTakeSnapshotButton = (ImageButton) findViewById(R.id.takeSnapshot);
+        mImageView.setFocusableInTouchMode(true);
+        mImageFrame = (RelativeLayout) findViewById(R.id.imageFrame);
+        mAddEyeButton = (Button) findViewById(R.id.addEye);
+        mChangeBackgroundButton = (Button) findViewById(R.id.changeBackground);
+        mTakeSnapshotButton = (Button) findViewById(R.id.takeSnapshot);
         mAddEyeButton.setOnClickListener(this);
         mChangeBackgroundButton.setOnClickListener(this);
         mTakeSnapshotButton.setOnClickListener(this);
-
         mContext = this;
         gestureDetector = new GestureDetector(this, new MyGestureDetector());
     }
@@ -109,6 +110,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
             }
         }
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -286,29 +289,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
         getContentResolver().takePersistableUriPermission(imageUri, takeFlags);
     }
 
-    private static int calculateInSampleSize(
-            BitmapFactory.Options options, int reqWidth, int reqHeight) {
-        // Raw height and width of image
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        int inSampleSize = 1;
-
-        if (height > reqHeight || width > reqWidth) {
-
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) > reqHeight
-                    && (halfWidth / inSampleSize) > reqWidth) {
-                inSampleSize *= 2;
-            }
-        }
-
-        return inSampleSize;
-    }
-
     private void showPreviewImage(Uri imageUri){
 
         selectedImagePath = Util.getPath(this, imageUri);
@@ -403,8 +383,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
         //create new eye and set listeners
         theEye = new GooglyEyeWidget(this);
         theEye.setId(eyeCounter++);
-        theEye.setOnClickListener(this);
-        theEye.setOnTouchListener(gestureListener);
+//        theEye.setOnClickListener(this);
+//        theEye.setOnTouchListener(gestureListener);
         listGooglyEyes.add(theEye);
         mImageFrame.addView(theEye);
         for (int i = 0; i < listGooglyEyes.size() - 1; i++) {
@@ -414,20 +394,19 @@ public class MainActivity extends Activity implements View.OnClickListener{
     }
 
 
+
+
     public interface Listener {
         public void animationFinished();
     }
 
-    private boolean areAnyHighlighted() {
-        for (GooglyEyeWidget eye : listGooglyEyes) {
-            if (eye.getMode() != GooglyEyeWidget.Mode.PLACED) {
-                return true;
-            }
-        }
-        return false;
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        return super.dispatchTouchEvent(ev);
     }
 
     View.OnTouchListener gestureListener = new View.OnTouchListener() {
+
         public boolean onTouch(View v, MotionEvent event) {
 
             float eventX = event.getX();
@@ -462,6 +441,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
                                 if (eye.getId() == theEye.getId()) {
                                     theEye = null;
                                 }
+
                             }
                         }
                     }
@@ -490,6 +470,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
                         theEye.resizeLowerRight(delta);
                         tempX = eventX;
                         tempY = eventY;
+                    } else {
                     }
                     break;
                 case MotionEvent.ACTION_UP:
@@ -497,8 +478,12 @@ public class MainActivity extends Activity implements View.OnClickListener{
                         theEye.setMode(GooglyEyeWidget.Mode.EDITING);
                     }
                     break;
+
+
             }
-            return gestureDetector.onTouchEvent(event);
+
+            gestureDetector.onTouchEvent(event);
+            return false;
         }
     };
 
