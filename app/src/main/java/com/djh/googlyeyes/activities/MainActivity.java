@@ -49,7 +49,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
     private static final int SELECT_PICTURE = 1;
     private static final int SELECT_PICURE_KITKAT = 2;
     public static final int CAMERA_REQUEST_CODE = 4;
-    public static final int CAMERA_RESULT_CODE = 100;
 
 
     private Uri imageUri;
@@ -57,9 +56,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
     RelativeLayout mContainer;
     TouchImageView mImageView;
     RelativeLayout mImageFrame;
-    Button mAddEyeButton;
-    Button mChangeBackgroundButton;
-    Button mTakeSnapshotButton;
 
     private Context mContext;
     private int eyeCounter = 0;
@@ -90,12 +86,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
         mImageView.setImageResource(R.drawable.ben_bg);
         mImageView.setFocusableInTouchMode(true);
         mImageFrame = (RelativeLayout) findViewById(R.id.imageFrame);
-        mAddEyeButton = (Button) findViewById(R.id.addEye);
-        mChangeBackgroundButton = (Button) findViewById(R.id.changeBackground);
-        mTakeSnapshotButton = (Button) findViewById(R.id.takeSnapshot);
-        mAddEyeButton.setOnClickListener(this);
-        mChangeBackgroundButton.setOnClickListener(this);
-        mTakeSnapshotButton.setOnClickListener(this);
         mContext = this;
     }
 
@@ -123,6 +113,12 @@ public class MainActivity extends Activity implements View.OnClickListener{
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+
+        if (item.getItemId() == R.id.plus) {
+            addEye();
+        } else if (item.getItemId() == R.id.add_image) {
+            viewImageSourcePicker();
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -349,19 +345,19 @@ public class MainActivity extends Activity implements View.OnClickListener{
     @Override
     public void onClick(View v) {
 
-        switch(v.getId()) {
-            case R.id.addEye:
-                addEye();
-                break;
-
-            case R.id.changeBackground:
-                viewImageSourcePicker();
-                break;
-
-            case R.id.takeSnapshot:
-                saveImage();
-                break;
-        }
+//        switch(v.getId()) {
+//            case R.id.addEye:
+//                addEye();
+//                break;
+//
+//            case R.id.changeBackground:
+//                viewImageSourcePicker();
+//                break;
+//
+//            case R.id.takeSnapshot:
+//                saveImage();
+//                break;
+//        }
 
     }
 

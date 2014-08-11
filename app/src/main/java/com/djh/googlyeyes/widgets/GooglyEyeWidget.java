@@ -31,7 +31,6 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     private Sensor mAccelerometer;
     private long lastTime;
     private static final long THRESHOLD_TIME = 16; //milliseconds
-    private static final int MIN_WIDTH = 200;
 
     private Context mContext;
     private GooglyEyeWidget thisEye = this;
@@ -54,6 +53,9 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     private int boxCornerX = 50;
     private int boxCornerY = 50;
     private int handleWidth = 24;
+    private int MIN_WIDTH = 0;
+    private int scleraRadius;
+    private int pupilRadius;
     private Mode mMode;
 
     public interface Listener {
@@ -109,8 +111,8 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
 
         int x = boxCornerX + (boxWidth / 2);
         int y = boxCornerY + (boxWidth / 2);
-        int scleraRadius = (boxWidth - (handleWidth)) / 2;
-        int pupilRadius = (scleraRadius * 2000) / 3000;
+        scleraRadius = (boxWidth - (handleWidth)) / 2;
+        pupilRadius = (scleraRadius * 2000) / 3000;
 
         if (mMode != Mode.PLACED) {
             //draw bounding box
@@ -149,6 +151,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
         boxCornerY = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, boxCornerY, getResources().getDisplayMetrics());
         boxWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, boxWidth, getResources().getDisplayMetrics());
         handleWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, handleWidth, getResources().getDisplayMetrics());
+        MIN_WIDTH = 2 * handleWidth;
     }
 
     public boolean isTouchingDragPoint(float eventX, float eventY) {
@@ -159,8 +162,9 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     }
 
     public boolean isTouchingSclera(float eventX, float eventY) {
-        if (eventX >= boxCornerX + handleWidth && eventX <= boxCornerX + boxWidth - handleWidth) {
-            if (eventY >= boxCornerY + handleWidth && eventY <= boxCornerY + boxWidth - handleWidth) {
+
+        if (eventX >= (boxCornerX + (boxWidth / 2) - scleraRadius) && eventX <= (boxCornerX + (boxWidth / 2) + scleraRadius)) {
+            if (eventY >= (boxCornerY + (boxWidth / 2) - scleraRadius) && eventY <= (boxCornerY + (boxWidth / 2) + scleraRadius)) {
                 return true;
             } else {
                 return false;
@@ -168,6 +172,15 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
         } else {
             return false;
         }
+//        if (eventX >= boxCornerX + handleWidth && eventX <= boxCornerX + boxWidth - handleWidth) {
+//            if (eventY >= boxCornerY + handleWidth && eventY <= boxCornerY + boxWidth - handleWidth) {
+//                return true;
+//            } else {
+//                return false;
+//            }
+//        } else {
+//            return false;
+//        }
     }
 
     public boolean isTouchingResizer(float eventX, float eventY) {
@@ -192,7 +205,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     }
 
     public void resizeLowerRight(int delta) {
-        if ((boxWidth + delta) > MIN_WIDTH) {
+        if ((boxWidth + delta) >= MIN_WIDTH) {
             boxWidth = boxWidth + delta;
         }
         invalidate();
