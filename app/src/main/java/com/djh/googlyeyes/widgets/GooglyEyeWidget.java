@@ -73,22 +73,30 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     public GooglyEyeWidget(Context context) {
         super(context);
         mContext = context;
-        init();
         units();
+        init();
+    }
+
+    public GooglyEyeWidget(Context context, int nextSize) {
+        super(context);
+        mContext = context;
+        units();
+        init();
+        boxWidth = nextSize;
     }
 
     public GooglyEyeWidget(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
-        init();
         units();
+        init();
     }
 
     public GooglyEyeWidget(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mContext = context;
-        init();
         units();
+        init();
     }
 
     public void setListener(Listener listener) {
@@ -384,6 +392,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
             public void onAnimationEnd(Animator animation) {
                 Log.e("DONE", "DONE");
                 mListener.removeView(thisEye);
+                Optometrist.INSTANCE.removeEye(thisEye);
             }
 
             @Override
@@ -397,6 +406,10 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
             }
         });
         animator.start();
+    }
+
+    public int getBoxWidth() {
+        return boxWidth;
     }
 
 }

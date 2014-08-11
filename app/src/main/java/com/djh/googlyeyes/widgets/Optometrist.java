@@ -17,7 +17,14 @@ public class Optometrist {
     }
 
     public GooglyEyeWidget makeEye(Context context, GooglyEyeWidget.Listener listener) {
-        GooglyEyeWidget eye = new GooglyEyeWidget(context);
+        GooglyEyeWidget eye;
+        int nextSize = 50;
+        if (eyeList.size() >= 1) {
+            nextSize = eyeList.get(eyeList.size() - 1).getBoxWidth();
+            eye = new GooglyEyeWidget(context, nextSize);
+        } else {
+            eye = new GooglyEyeWidget(context);
+        }
         eye.setListener(listener);
         eye.setId(eyeList.size());
         eyeList.add(eye);
@@ -33,6 +40,10 @@ public class Optometrist {
                 eye.setMode(GooglyEyeWidget.Mode.PLACED);
             }
         }
+    }
+
+    public void removeEye(GooglyEyeWidget eye) {
+        eyeList.remove(eye);
     }
 
 }
