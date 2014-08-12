@@ -29,6 +29,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.djh.googlyeyes.fragments.ImageSourcePicker;
@@ -62,6 +63,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
     RelativeLayout mContainer;
     TouchImageView mImageView;
     RelativeLayout mImageFrame;
+    TextView mAddImageLabel;
 
     private File f = null;
     private Context mContext;
@@ -85,12 +87,22 @@ public class MainActivity extends Activity implements View.OnClickListener{
         setContentView(R.layout.activity_main);
         mContainer = (RelativeLayout) findViewById(R.id.container);
         mImageView = (TouchImageView) findViewById(R.id.imageView);
-//        mImageView.setImageResource(R.drawable.ben_bg);
         mImageView.setFocusableInTouchMode(true);
         mImageFrame = (RelativeLayout) findViewById(R.id.imageFrame);
+        mAddImageLabel = (TextView) findViewById(R.id.addImageLabel);
+        mAddImageLabel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewImageSourcePicker();
+            }
+        });
         getActionBar().setTitle("GOOGLY EYES");
         getActionBar().setIcon(R.drawable.ic_actionbar_icon);
         mContext = this;
+
+        if (savedInstanceState != null) {
+            //redraw eyes here if device was rotated / backgrounded
+        }
     }
 
     @Override
@@ -123,7 +135,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
         } else if (item.getItemId() == R.id.add_image) {
             viewImageSourcePicker();
         } else if (item.getItemId() == R.id.save) {
-            showProgress("Saving File...");
             saveImage();
         }
 
@@ -175,11 +186,9 @@ public class MainActivity extends Activity implements View.OnClickListener{
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            hideProgress();
             Toast.makeText(this, getString(R.string.problem_saving), Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             e.printStackTrace();
-            hideProgress();
             Toast.makeText(this, getString(R.string.problem_saving), Toast.LENGTH_SHORT).show();
         }
 
@@ -198,7 +207,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
             Toast.makeText(this, getString(R.string.problem_saving), Toast.LENGTH_SHORT).show();
         }
 
-        hideProgress();
         startActivity(intent);
     }
 
@@ -386,7 +394,9 @@ public class MainActivity extends Activity implements View.OnClickListener{
             }
 
             if (bitmap != null) {
+                mImageView.resetZoom();
                 mImageView.setImageBitmap(bitmap);
+                mAddImageLabel.setVisibility(View.GONE);
 //                removeAllEyes();
             }
         }
@@ -401,6 +411,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
         final String path = mCameraImageUri.getPath();
         Bitmap bitmap = BitmapFactory.decodeFile(path);
         mImageView.setImageBitmap(bitmap);
+        mAddImageLabel.setVisibility(View.GONE);
 //        removeAllEyes();
     }
 
