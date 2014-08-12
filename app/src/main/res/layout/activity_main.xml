@@ -12,6 +12,23 @@
         android:layout_height="match_parent"
         android:id="@+id/imageFrame">
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="+ Add an image to put Googly Eyes on"
+            android:textColor="@android:color/white"
+            android:textSize="30sp"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp"
+            android:layout_marginTop="25dp"
+            android:gravity="center_horizontal"/>
+        </RelativeLayout>
+
     <com.djh.googlyeyes.widgets.TouchImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"

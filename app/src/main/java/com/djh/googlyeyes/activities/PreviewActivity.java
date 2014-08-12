@@ -7,14 +7,20 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.djh.googlyeyes.R;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
@@ -25,14 +31,29 @@ public class PreviewActivity extends Activity{
     public static final String KEY_URI = "com.djh.googlyeyes.activities.PreviewActivity.KEY_URI";
 
     private ImageView mImageView;
+    private Button shareButton;
     private Uri imageUri = null;
+    private Bitmap bitmap = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_preview);
         mImageView = (ImageView) findViewById(R.id.image);
-
+        shareButton = (Button) findViewById(R.id.shareButton);
+        shareButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (bitmap != null) {
+                    //Create intent for sharing image
+                    Intent shareIntent = new Intent();
+                    shareIntent.setAction(Intent.ACTION_SEND);
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, imageUri);
+                    shareIntent.setType("image/jpeg");
+                    startActivity(Intent.createChooser(shareIntent, "Share image..."));
+                }
+            }
+        });
         getActionBar().setTitle("GOOGLY EYES");
         getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setIcon(R.drawable.ic_actionbar_icon);
@@ -50,9 +71,10 @@ public class PreviewActivity extends Activity{
     protected void onResume() {
         super.onResume();
         
-        Bitmap bitmap = makeImageFromUri();
+        bitmap = makeImageFromUri();
         if (bitmap != null) {
             mImageView.setImageBitmap(makeImageFromUri());
+            bitmap.recycle();
         } else {
             finish();
             Toast.makeText(this, "File not found.", Toast.LENGTH_SHORT).show();

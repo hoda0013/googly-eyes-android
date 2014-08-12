@@ -3,6 +3,7 @@ package com.djh.googlyeyes.activities;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -64,13 +65,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
 
     private File f = null;
     private Context mContext;
-    private int eyeCounter = 0;
-    private GooglyEyeWidget theEye = null;
     private Uri mCameraImageUri = null;
 
-//    private List<GooglyEyeWidget> listGooglyEyes = new ArrayList<GooglyEyeWidget>();
-
-    private GestureDetector gestureDetector;
     private ImageSourcePicker.Listener imageSourcePickerListener = new ImageSourcePicker.Listener() {
         @Override
         public void onTakePhotoSelected() {
@@ -89,9 +85,11 @@ public class MainActivity extends Activity implements View.OnClickListener{
         setContentView(R.layout.activity_main);
         mContainer = (RelativeLayout) findViewById(R.id.container);
         mImageView = (TouchImageView) findViewById(R.id.imageView);
-        mImageView.setImageResource(R.drawable.ben_bg);
+//        mImageView.setImageResource(R.drawable.ben_bg);
         mImageView.setFocusableInTouchMode(true);
         mImageFrame = (RelativeLayout) findViewById(R.id.imageFrame);
+        getActionBar().setTitle("GOOGLY EYES");
+        getActionBar().setIcon(R.drawable.ic_actionbar_icon);
         mContext = this;
     }
 
@@ -125,6 +123,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
         } else if (item.getItemId() == R.id.add_image) {
             viewImageSourcePicker();
         } else if (item.getItemId() == R.id.save) {
+            showProgress("Saving File...");
             saveImage();
         }
 
@@ -133,39 +132,59 @@ public class MainActivity extends Activity implements View.OnClickListener{
 
     private void saveImage() {
 
+        long startMillis = System.currentTimeMillis();
+        //Unfocus any eyes
+        Optometrist.INSTANCE.removeFocusFromAll();
+
         //Create filename
         String filename = Environment.getExternalStorageDirectory().toString() + "/" + getString(R.string.photo_directory) + "/"
                 + System.currentTimeMillis() + ".jpg";
         f = new File(filename);
+        long endMillis = System.currentTimeMillis();
+
+        Log.e("FILE CREATION = ", Long.toString(startMillis - endMillis));
+        startMillis = endMillis;
 
         //Find directory, create if doesn't exist
         if (!f.getParentFile().exists()) {
             f.getParentFile().mkdirs();
         }
+        endMillis = System.currentTimeMillis();
+        Log.e("DIRECTORY CREATION = ", Long.toString(startMillis - endMillis));
+        startMillis = endMillis;
 
         //Grab bitmap of image
         mImageFrame.setDrawingCacheEnabled(true);
         Bitmap bitmap = Bitmap.createBitmap(mImageFrame.getDrawingCache());
-        mImageView.setImageBitmap(bitmap);
+//        mImageView.setImageBitmap(bitmap);
         mImageFrame.destroyDrawingCache();
+
+        endMillis = System.currentTimeMillis();
+        Log.e("BITMAP CREATION = ", Long.toString(startMillis - endMillis));
+        startMillis = endMillis;
 
         //Save
         FileOutputStream fOut = null;
 
         try {
             fOut = new FileOutputStream(f);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 90, fOut);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fOut);
             fOut.flush();
             if (fOut != null) {
                 fOut.close();
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            hideProgress();
             Toast.makeText(this, getString(R.string.problem_saving), Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             e.printStackTrace();
+            hideProgress();
             Toast.makeText(this, getString(R.string.problem_saving), Toast.LENGTH_SHORT).show();
         }
+
+        endMillis = System.currentTimeMillis();
+        Log.e("FOUT CREATION = ", Long.toString(startMillis - endMillis));
 
         startPreviewActivity(f);
     }
@@ -178,6 +197,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
         } else {
             Toast.makeText(this, getString(R.string.problem_saving), Toast.LENGTH_SHORT).show();
         }
+
+        hideProgress();
         startActivity(intent);
     }
 
@@ -396,20 +417,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
     @Override
     public void onClick(View v) {
 
-//        switch(v.getId()) {
-//            case R.id.addEye:
-//                addEye();
-//                break;
-//
-//            case R.id.changeBackground:
-//                viewImageSourcePicker();
-//                break;
-//
-//            case R.id.takeSnapshot:
-//                saveImage();
-//                break;
-//        }
-
     }
 
     private void viewImageSourcePicker() {
@@ -429,5 +436,31 @@ public class MainActivity extends Activity implements View.OnClickListener{
             }
         });
         mImageFrame.addView(eye);
+    }
+
+    ProgressDialog pd;
+
+    public void showProgress(String message) {
+        if (pd == null) {
+            pd = new ProgressDialog(this);
+            pd.setMessage(message);
+            pd.setCancelable(false);
+            pd.setIndeterminate(true);
+            pd.show();
+        }
+    }
+
+    public void hideProgress() {
+        if (pd != null) {
+            try {
+                pd.dismiss();
+            } catch (IllegalArgumentException e) {
+                //FIXME: I think this works but is bad practice
+                //Got the idea here: http://stackoverflow.com/questions/2745061/java-lang-illegalargumentexception-view-not-attached-to-window-manager
+                //After getting an error from this line
+            } finally {
+                pd = null;
+            }
+        }
     }
 }

@@ -273,7 +273,6 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
 
                 default:
                     return false;
-
             }
 
 

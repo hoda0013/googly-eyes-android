@@ -824,58 +824,62 @@ public class TouchImageView extends ImageView {
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
-            mScaleDetector.onTouchEvent(event);
-            mGestureDetector.onTouchEvent(event);
-            PointF curr = new PointF(event.getX(), event.getY());
+            if (Optometrist.INSTANCE.areEyesPresent()) {
+                return false;
+            } else {
+                mScaleDetector.onTouchEvent(event);
+                mGestureDetector.onTouchEvent(event);
+                PointF curr = new PointF(event.getX(), event.getY());
 
-            if (state == State.NONE || state == State.DRAG || state == State.FLING) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        last.set(curr);
-                        if (fling != null)
-                            fling.cancelFling();
-                        setState(State.DRAG);
-                        break;
+                if (state == State.NONE || state == State.DRAG || state == State.FLING) {
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                            last.set(curr);
+                            if (fling != null)
+                                fling.cancelFling();
+                            setState(State.DRAG);
+                            break;
 
-                    case MotionEvent.ACTION_MOVE:
-                        if (state == State.DRAG) {
-                            float deltaX = curr.x - last.x;
-                            float deltaY = curr.y - last.y;
-                            float fixTransX = getFixDragTrans(deltaX, viewWidth, getImageWidth());
-                            float fixTransY = getFixDragTrans(deltaY, viewHeight, getImageHeight());
-                            matrix.postTranslate(fixTransX, fixTransY);
-                            fixTrans();
-                            last.set(curr.x, curr.y);
-                        }
-                        break;
+                        case MotionEvent.ACTION_MOVE:
+                            if (state == State.DRAG) {
+                                float deltaX = curr.x - last.x;
+                                float deltaY = curr.y - last.y;
+                                float fixTransX = getFixDragTrans(deltaX, viewWidth, getImageWidth());
+                                float fixTransY = getFixDragTrans(deltaY, viewHeight, getImageHeight());
+                                matrix.postTranslate(fixTransX, fixTransY);
+                                fixTrans();
+                                last.set(curr.x, curr.y);
+                            }
+                            break;
 
-                    case MotionEvent.ACTION_UP:
-                    case MotionEvent.ACTION_POINTER_UP:
-                        setState(State.NONE);
-                        break;
+                        case MotionEvent.ACTION_UP:
+                        case MotionEvent.ACTION_POINTER_UP:
+                            setState(State.NONE);
+                            break;
+                    }
                 }
+
+                setImageMatrix(matrix);
+
+                //
+                // User-defined OnTouchListener
+                //
+                if (userTouchListener != null) {
+                    userTouchListener.onTouch(v, event);
+                }
+
+                //
+                // OnTouchImageViewListener is set: TouchImageView dragged by user.
+                //
+                if (touchImageViewListener != null) {
+                    touchImageViewListener.onMove();
+                }
+
+                //
+                // indicate event was handled
+                //
+                return true;
             }
-
-            setImageMatrix(matrix);
-
-            //
-            // User-defined OnTouchListener
-            //
-            if(userTouchListener != null) {
-                userTouchListener.onTouch(v, event);
-            }
-
-            //
-            // OnTouchImageViewListener is set: TouchImageView dragged by user.
-            //
-            if (touchImageViewListener != null) {
-                touchImageViewListener.onMove();
-            }
-
-            //
-            // indicate event was handled
-            //
-            return true;
         }
     }
 
@@ -1240,6 +1244,7 @@ public class TouchImageView extends ImageView {
         Scroller scroller;
         OverScroller overScroller;
         boolean isPreGingerbread;
+
 
         public CompatScroller(Context context) {
             if (VERSION.SDK_INT < VERSION_CODES.GINGERBREAD) {

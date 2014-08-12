@@ -46,4 +46,22 @@ public class Optometrist {
         eyeList.remove(eye);
     }
 
+    public void removeFocusFromAll() {
+        for (GooglyEyeWidget eye : eyeList) {
+            eye.setMode(GooglyEyeWidget.Mode.PLACED);
+        }
+    }
+
+    public void removeAllEyes() {
+        eyeList.clear();
+    }
+
+    public boolean areEyesPresent() {
+        if (eyeList.size() > 0) {
+            return true;
+        }
+
+        return false;
+    }
+
 }
