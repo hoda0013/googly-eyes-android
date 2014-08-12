@@ -172,15 +172,6 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
         } else {
             return false;
         }
-//        if (eventX >= boxCornerX + handleWidth && eventX <= boxCornerX + boxWidth - handleWidth) {
-//            if (eventY >= boxCornerY + handleWidth && eventY <= boxCornerY + boxWidth - handleWidth) {
-//                return true;
-//            } else {
-//                return false;
-//            }
-//        } else {
-//            return false;
-//        }
     }
 
     public boolean isTouchingResizer(float eventX, float eventY) {

@@ -7,4 +7,6 @@
     <string name="eye_deleted">Eye Deleted</string>
     <string name="image_picker_camera_selection">Camera</string>
     <string name="image_picker_gallery_selection">Gallery</string>
+    <string name="photo_directory">GooglyEyePics</string>
+    <string name="problem_saving">There was a problem saving. Please try again.</string>
 </resources>

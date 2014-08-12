@@ -3,8 +3,10 @@ package com.djh.googlyeyes.activities;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,6 +16,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -38,10 +41,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 
 public class MainActivity extends Activity implements View.OnClickListener{
@@ -57,6 +62,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
     TouchImageView mImageView;
     RelativeLayout mImageFrame;
 
+    private File f = null;
     private Context mContext;
     private int eyeCounter = 0;
     private GooglyEyeWidget theEye = null;
@@ -118,16 +124,61 @@ public class MainActivity extends Activity implements View.OnClickListener{
             addEye();
         } else if (item.getItemId() == R.id.add_image) {
             viewImageSourcePicker();
+        } else if (item.getItemId() == R.id.save) {
+            saveImage();
         }
 
         return super.onOptionsItemSelected(item);
     }
 
     private void saveImage() {
+
+        //Create filename
+        String filename = Environment.getExternalStorageDirectory().toString() + "/" + getString(R.string.photo_directory) + "/"
+                + System.currentTimeMillis() + ".jpg";
+        f = new File(filename);
+
+        //Find directory, create if doesn't exist
+        if (!f.getParentFile().exists()) {
+            f.getParentFile().mkdirs();
+        }
+
+        //Grab bitmap of image
         mImageFrame.setDrawingCacheEnabled(true);
         Bitmap bitmap = Bitmap.createBitmap(mImageFrame.getDrawingCache());
         mImageView.setImageBitmap(bitmap);
         mImageFrame.destroyDrawingCache();
+
+        //Save
+        FileOutputStream fOut = null;
+
+        try {
+            fOut = new FileOutputStream(f);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, fOut);
+            fOut.flush();
+            if (fOut != null) {
+                fOut.close();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            Toast.makeText(this, getString(R.string.problem_saving), Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, getString(R.string.problem_saving), Toast.LENGTH_SHORT).show();
+        }
+
+        startPreviewActivity(f);
+    }
+
+    private void startPreviewActivity(File f) {
+        Uri uri = Uri.fromFile(f);
+        Intent intent = new Intent(this, PreviewActivity.class);
+        if (uri != null) {
+            intent.setData(uri);
+        } else {
+            Toast.makeText(this, getString(R.string.problem_saving), Toast.LENGTH_SHORT).show();
+        }
+        startActivity(intent);
     }
 
     private void takePhoto() {
