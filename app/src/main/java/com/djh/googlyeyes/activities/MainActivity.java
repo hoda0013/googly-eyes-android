@@ -29,6 +29,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.djh.googlyeyes.fragments.ImageSourcePicker;
@@ -62,6 +63,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
     RelativeLayout mContainer;
     TouchImageView mImageView;
     RelativeLayout mImageFrame;
+    TextView xVal;
+    TextView zVal;
 
     private File f = null;
     private Context mContext;
@@ -88,6 +91,9 @@ public class MainActivity extends Activity implements View.OnClickListener{
 //        mImageView.setImageResource(R.drawable.ben_bg);
         mImageView.setFocusableInTouchMode(true);
         mImageFrame = (RelativeLayout) findViewById(R.id.imageFrame);
+        xVal = (TextView) findViewById(R.id.xVal);
+        zVal = (TextView) findViewById(R.id.zVal);
+
         getActionBar().setTitle("GOOGLY EYES");
         getActionBar().setIcon(R.drawable.ic_actionbar_icon);
         mContext = this;
@@ -433,6 +439,13 @@ public class MainActivity extends Activity implements View.OnClickListener{
             @Override
             public void removeView(GooglyEyeWidget eye) {
                 mImageFrame.removeView(eye);
+            }
+
+            @Override
+            public void updateVals(double x, double z) {
+                xVal.setText("X = " + Double.toString(x));
+                zVal.setText("Z = " + Double.toString(z));
+
             }
         });
         mImageFrame.addView(eye);

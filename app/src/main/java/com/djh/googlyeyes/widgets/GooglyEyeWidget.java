@@ -60,6 +60,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
 
     public interface Listener {
         public void removeView(GooglyEyeWidget eye);
+        public void updateVals(double x, double z);
     }
 
     public enum Mode {
@@ -340,7 +341,10 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
 
         if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             double x = sensorEvent.values[0];
+            double y = sensorEvent.values[1];
             double z = sensorEvent.values[2];
+            z = z - 4;
+            mListener.updateVals(x, z);
 
             long currentTime = System.currentTimeMillis();
 
@@ -353,8 +357,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
                 //scale vectors
 
                 unitX = (float) -x;
-                unitY = (float) z;
-
+                unitY = (float) -z;
                 lastTime = currentTime;
                 invalidate();
             }
