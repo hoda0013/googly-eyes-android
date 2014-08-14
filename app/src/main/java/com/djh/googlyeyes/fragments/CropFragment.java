@@ -1,5 +1,6 @@
 package com.djh.googlyeyes.fragments;
 
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -7,6 +8,7 @@ import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -36,11 +38,15 @@ public class CropFragment extends BaseFragment{
 
     public static final String FRAG_TAG = "com.djh.googlyeyes.fragments.CropFragment.FRAG_TAG";
     public static final String KEY_URI = "com.djh.googlyeyes.fragments.CropFragment.KEY_URI";
+    public static final String KEY_HAS_SEEN_SLIDESHOW = "com.djh.googlyeyes.fragments.CropFragment.KEY_HAS_SEEN_SLIDESHOW";
 
     private Uri mImageUri = null;
 
     private CropImageView mCropImageView;
+    private RelativeLayout instructionSlide;
     private Listener mListener;
+    private boolean hasSeenPreviewSlide = false;
+
 
 
     public interface Listener {
@@ -71,6 +77,7 @@ public class CropFragment extends BaseFragment{
             mImageUri = Uri.parse(savedInstanceState.getString(KEY_URI));
         }
         setHasOptionsMenu(true);
+
     }
 
     @Override
@@ -83,6 +90,7 @@ public class CropFragment extends BaseFragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_crop, container, false);
         mCropImageView = (CropImageView) view.findViewById(R.id.CropImageView);
+        instructionSlide = (RelativeLayout) view.findViewById(R.id.instructionSlide);
 
         String imagePath = Util.getPath(getActivity(), mImageUri);
 
@@ -95,6 +103,28 @@ public class CropFragment extends BaseFragment{
         getActivity().getActionBar().setHomeButtonEnabled(true);
         getActivity().getActionBar().setLogo(R.drawable.ic_back_button);
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        hasSeenPreviewSlide = sp.getBoolean(KEY_HAS_SEEN_SLIDESHOW, false);
+
+        if (!hasSeenPreviewSlide) {
+            instructionSlide.setVisibility(View.VISIBLE);
+            instructionSlide.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    instructionSlide.setVisibility(View.GONE);
+                    //Mark slide as having been seen before
+                    SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                    sp.edit().putBoolean(KEY_HAS_SEEN_SLIDESHOW, true).apply();
+                }
+            });
+        } else {
+            instructionSlide.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -145,7 +175,7 @@ public class CropFragment extends BaseFragment{
             e.printStackTrace();
             Toast.makeText(getActivity(), getString(R.string.problem_saving), Toast.LENGTH_SHORT).show();
         } finally {
-            if (success = true) {
+            if (success == true) {
                 mListener.onFinishedCropping(Uri.fromFile(f));
             }
         }

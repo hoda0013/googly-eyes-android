@@ -1,19 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.djh.googlyeyes.widgets.SlidingRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:background="@android:color/black">
 
-    <TextView
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:id="@+id/addImage"
-    android:text="+ Add an image to put Googly Eyes on"
-    android:textColor="@android:color/white"
-    android:textSize="30sp"
-    android:paddingLeft="15dp"
-    android:paddingRight="15dp"
-    android:layout_marginTop="25dp"
-    android:gravity="center_horizontal"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-</RelativeLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:id="@+id/camera"
+        android:text="+ Take Photo"
+        android:textColor="@android:color/white"
+        android:textSize="30sp"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:gravity="center"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/bounding_box_handle"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:id="@+id/gallery"
+        android:text="+ Add photo from gallery"
+        android:textColor="@android:color/white"
+        android:textSize="30sp"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:gravity="center"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/bounding_box_handle"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:id="@+id/viewer"
+        android:text="Viewer"
+        android:textColor="@android:color/white"
+        android:textSize="30sp"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:gravity="center"/>
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/instructionSlide"
+        android:background="@color/instruction_slide_bg">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Take a picture or select an image from the gallery to add Googly Eyes to!"
+            android:textColor="@android:color/white"
+            android:textSize="30sp"/>
+
+        </RelativeLayout>
+
+</com.djh.googlyeyes.widgets.SlidingRelativeLayout>

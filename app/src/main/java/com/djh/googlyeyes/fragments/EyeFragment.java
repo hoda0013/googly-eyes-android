@@ -1,9 +1,11 @@
 package com.djh.googlyeyes.fragments;
 
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -31,13 +33,17 @@ public class EyeFragment extends BaseFragment {
 
     public static final String FRAG_TAG = "com.djh.googlyeyes.fragments.EyeFragment.FRAG_TAG";
     public static final String KEY_URI = "com.djh.googleeyes.fragments.EyeFragment.KEY_URI";
+    public static final String KEY_HAS_SEEN_SLIDESHOW = "com.djh.googlyeyes.fragments.EyeFragment.KEY_HAS_SEEN_SLIDESHOW";
+
 
     private Uri mImageUri = null;
     private Listener mListener;
     private ImageView imageView;
     private RelativeLayout mContainer;
     private RelativeLayout mImageFrame;
+    private RelativeLayout instructionSlide;
 
+    private boolean hasSeenPreviewSlide = false;
 
     public interface Listener {
         public void onNextClicked(Uri uri);
@@ -82,8 +88,9 @@ public class EyeFragment extends BaseFragment {
         imageView.setImageURI(mImageUri);
         mContainer = (RelativeLayout) view.findViewById(R.id.container);
         mImageFrame = (RelativeLayout) view.findViewById(R.id.imageFrame);
+        instructionSlide = (RelativeLayout) view.findViewById(R.id.instructionSlide);
 
-        getActivity().getActionBar().setTitle("PLACE EYES");
+        getActivity().getActionBar().setTitle("ADD ZEE GOOGLYS");
         getActivity().getActionBar().setHomeButtonEnabled(true);
         getActivity().getActionBar().setLogo(R.drawable.ic_back_button);
         return view;
@@ -92,7 +99,28 @@ public class EyeFragment extends BaseFragment {
     @Override
     public void onResume() {
         super.onResume();
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        hasSeenPreviewSlide = sp.getBoolean(KEY_HAS_SEEN_SLIDESHOW, false);
 
+        if (!hasSeenPreviewSlide) {
+            instructionSlide.setVisibility(View.VISIBLE);
+            instructionSlide.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    instructionSlide.setVisibility(View.GONE);
+                    //Mark slide as having been seen before
+                    SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                    sp.edit().putBoolean(KEY_HAS_SEEN_SLIDESHOW, true).apply();
+                }
+            });
+        } else {
+            instructionSlide.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
     }
 
     @Override

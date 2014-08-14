@@ -1,35 +1,22 @@
 package com.djh.googlyeyes.activities;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.Fragment;
-import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.hardware.Camera;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,24 +24,15 @@ import android.widget.Toast;
 import com.djh.googlyeyes.fragments.CropFragment;
 import com.djh.googlyeyes.fragments.EyeFragment;
 import com.djh.googlyeyes.fragments.HomeFragment;
-import com.djh.googlyeyes.fragments.ImageSourcePicker;
-import com.djh.googlyeyes.fragments.PreviewFragment;
-import com.djh.googlyeyes.widgets.GooglyEyeWidget;
+import com.djh.googlyeyes.fragments.ShareFragment;
 import com.djh.googlyeyes.R;
-import com.djh.googlyeyes.util.Util;
-import com.djh.googlyeyes.widgets.Optometrist;
-import com.djh.googlyeyes.widgets.TouchImageView;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.Locale;
 
 
 public class MainActivity extends BaseActivity implements View.OnClickListener{
@@ -64,39 +42,29 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
     private static final int SELECT_PICTURE = 1;
     private static final int SELECT_PICURE_KITKAT = 2;
     public static final int CAMERA_REQUEST_CODE = 4;
-    public static final int CAMERA_RESULT_CODE = 100;
-
-
 
     private Uri imageUri;
-    private String selectedImagePath;
     RelativeLayout mContainer;
-//    TouchImageView mImageView;
-//    RelativeLayout mImageFrame;
-    TextView xVal;
-    TextView zVal;
 
     private File f = null;
     private Context mContext;
     private Uri mCameraImageUri = null;
 
-    private ImageSourcePicker.Listener imageSourcePickerListener = new ImageSourcePicker.Listener() {
+    private HomeFragment.Listener homeFragmentListener = new HomeFragment.Listener() {
+
         @Override
-        public void onTakePhotoSelected() {
+        public void onCameraClicked() {
             takePhoto();
         }
 
         @Override
-        public void onImageGallerySelected() {
+        public void onGalleryClicked() {
             selectImageFromGallery();
         }
-    };
 
-    private HomeFragment.Listener homeFragmentListener = new HomeFragment.Listener() {
         @Override
-        public void onAddImageClick() {
-            //show ImageSourcePicker
-            viewImageSourcePicker();
+        public void onViewerClicked() {
+
         }
     };
 
@@ -112,6 +80,15 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
         public void onNextClicked(Uri uri) {
             //show share fragment
             viewPreviewFragment(uri);
+        }
+    };
+
+    private ShareFragment.Listener shareFragmentListener = new ShareFragment.Listener() {
+        @Override
+        public void onDoneClicked() {
+            while (getFragmentManager().getBackStackEntryCount() >= 1) {
+                getFragmentManager().popBackStackImmediate();
+            }
         }
     };
 
@@ -131,17 +108,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
         return super.onOptionsItemSelected(item);
     }
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mContainer = (RelativeLayout) findViewById(R.id.container);
-//        mImageView = (TouchImageView) findViewById(R.id.imageView);
-//        mImageView.setImageResource(R.drawable.ben_bg);
-//        mImageView.setFocusableInTouchMode(true);
-//        mImageFrame = (RelativeLayout) findViewById(R.id.imageFrame);
-//        xVal = (TextView) findViewById(R.id.xVal);
-//        zVal = (TextView) findViewById(R.id.zVal);
 
         getActionBar().setTitle("GOOGLY EYES");
         getActionBar().setIcon(R.drawable.ic_actionbar_icon);
@@ -175,11 +148,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
     @Override
     public void onAttachFragment(Fragment fragment) {
         super.onAttachFragment(fragment);
-        if (fragment instanceof ImageSourcePicker) {
-            if (imageSourcePickerListener != null) {
-                ((ImageSourcePicker)fragment).setListener(imageSourcePickerListener);
-            }
-        } else if (fragment instanceof HomeFragment) {
+        if (fragment instanceof HomeFragment) {
             if (homeFragmentListener != null) {
                 ((HomeFragment)fragment).setListener(homeFragmentListener);
             }
@@ -191,8 +160,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
             if (eyeFragmentListener != null) {
                 ((EyeFragment)fragment).setListener(eyeFragmentListener);
             }
+        } else if (fragment instanceof ShareFragment) {
+            if (shareFragmentListener != null) {
+                ((ShareFragment)fragment).setListener(shareFragmentListener);
+            }
         }
-
     }
 
     @Override
@@ -210,8 +182,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
             if (resultCode == RESULT_OK) {
                 imageUri = data.getData();
                 viewCropFragment(imageUri);
-
-//                showPreviewImage(imageUri);
             } else if(resultCode == RESULT_CANCELED){
                 Log.i("IMAGE", "CANCELLED" );
             }
@@ -220,9 +190,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
             if(resultCode == RESULT_OK) {
                 imageUri = data.getData();
                 makeImageUri(data, imageUri);
-
                 viewCropFragment(imageUri);
-//                showPreviewImage(imageUri);
             } else if(resultCode == RESULT_CANCELED){
                 Log.i("IMAGE", "CANCELLED" );
             }
@@ -230,10 +198,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
     }
 
     private void viewPreviewFragment(Uri uri) {
-        PreviewFragment frag = (PreviewFragment) getFragmentManager().findFragmentByTag(PreviewFragment.FRAG_TAG);
+        ShareFragment frag = (ShareFragment) getFragmentManager().findFragmentByTag(ShareFragment.FRAG_TAG);
 
         if (frag == null) {
-            frag = PreviewFragment.newInstance(uri);
+            frag = ShareFragment.newInstance(uri);
         }
 
         replaceFragment(frag, frag.FRAG_TAG, mContainer.getId(), true);
@@ -258,64 +226,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
 
         replaceFragment(frag, frag.FRAG_TAG, mContainer.getId(), true);
     }
-//    private void saveImage() {
-//
-//        long startMillis = System.currentTimeMillis();
-//        //Unfocus any eyes
-//        Optometrist.INSTANCE.removeFocusFromAll();
-//
-//        //Create filename
-//        String filename = Environment.getExternalStorageDirectory().toString() + "/" + getString(R.string.photo_directory) + "/"
-//                + System.currentTimeMillis() + ".jpg";
-//        f = new File(filename);
-//        long endMillis = System.currentTimeMillis();
-//
-//        Log.e("FILE CREATION = ", Long.toString(startMillis - endMillis));
-//        startMillis = endMillis;
-//
-//        //Find directory, create if doesn't exist
-//        if (!f.getParentFile().exists()) {
-//            f.getParentFile().mkdirs();
-//        }
-//        endMillis = System.currentTimeMillis();
-//        Log.e("DIRECTORY CREATION = ", Long.toString(startMillis - endMillis));
-//        startMillis = endMillis;
-//
-//        //Grab bitmap of image
-//        mImageFrame.setDrawingCacheEnabled(true);
-//        Bitmap bitmap = Bitmap.createBitmap(mImageFrame.getDrawingCache());
-////        mImageView.setImageBitmap(bitmap);
-//        mImageFrame.destroyDrawingCache();
-//
-//        endMillis = System.currentTimeMillis();
-//        Log.e("BITMAP CREATION = ", Long.toString(startMillis - endMillis));
-//        startMillis = endMillis;
-//
-//        //Save
-//        FileOutputStream fOut = null;
-//
-//        try {
-//            fOut = new FileOutputStream(f);
-//            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fOut);
-//            fOut.flush();
-//            if (fOut != null) {
-//                fOut.close();
-//            }
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//            hideProgress();
-//            Toast.makeText(this, getString(R.string.problem_saving), Toast.LENGTH_SHORT).show();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            hideProgress();
-//            Toast.makeText(this, getString(R.string.problem_saving), Toast.LENGTH_SHORT).show();
-//        }
-//
-//        endMillis = System.currentTimeMillis();
-//        Log.e("FOUT CREATION = ", Long.toString(startMillis - endMillis));
-//
-//        startPreviewActivity(f);
-//    }
 
     private void viewHomeFragment() {
         HomeFragment frag = (HomeFragment) getFragmentManager().findFragmentByTag(HomeFragment.FRAG_TAG);
@@ -327,25 +237,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
         replaceFragment(frag, frag.FRAG_TAG, mContainer.getId(), false);
     }
 
-    private void startPreviewActivity(File f) {
-        Uri uri = Uri.fromFile(f);
-        Intent intent = new Intent(this, PreviewActivity.class);
-        if (uri != null) {
-            intent.setData(uri);
-        } else {
-            Toast.makeText(this, getString(R.string.problem_saving), Toast.LENGTH_SHORT).show();
-        }
-
-        hideProgress();
-        startActivity(intent);
-    }
-
     private void takePhoto() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
         if(android.os.Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
             //There is an external storage space
-
             try {
                 File file = createImageFile();
                 mCameraImageUri = Uri.fromFile(file);
@@ -465,119 +361,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
         getContentResolver().takePersistableUriPermission(imageUri, takeFlags);
     }
 
-//    private void showPreviewImage(Uri imageUri){
-//
-//        selectedImagePath = Util.getPath(this, imageUri);
-//
-//        if (selectedImagePath!=null) {
-//            Uri externalImages = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-//            String[] projection = {MediaStore.Images.Media._ID, MediaStore.Images.Media.ORIENTATION};
-//            Cursor c = getContentResolver().query(externalImages, projection, MediaStore.Images.Media.DATA + " = ? ", new String[]{selectedImagePath}, null);
-//
-//            Bitmap bitmap = null;
-//            if (c != null && c.moveToFirst()) {
-//                int rotation = c.getInt(c.getColumnIndex(MediaStore.Images.Media.ORIENTATION));
-//                try {
-//                    bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                if (bitmap != null && rotation != 0) {
-//                    Matrix matrix = new Matrix();
-//                    matrix.postRotate(rotation);
-//
-//                    int w = bitmap.getWidth();
-//                    int h = bitmap.getHeight();
-//
-//                    Bitmap newBitmap = Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true);
-//                    bitmap.recycle();
-//                    bitmap = newBitmap;
-//                }
-//            }
-//
-//            if (bitmap != null) {
-//                mImageView.setImageBitmap(bitmap);
-////                removeAllEyes();
-//            }
-//        }
-//    }
-
-//    private void showCameraPreviewImage() {
-//        if (mCameraImageUri == null) {
-//            // we lost something, so just fail
-//            return;
-//        }
-//
-//        final String path = mCameraImageUri.getPath();
-//        Bitmap bitmap = BitmapFactory.decodeFile(path);
-//        mImageView.setImageBitmap(bitmap);
-////        removeAllEyes();
-//    }
-
-//    private void removeAllEyes() {
-//        for (GooglyEyeWidget eye: listGooglyEyes) {
-//            mImageFrame.removeView(eye);
-//        }
-//        listGooglyEyes.clear();
-//    }
-
-    float tempX = 0.0f;
-    float tempY = 0.0f;
-
     @Override
     public void onClick(View v) {
 
-    }
-
-    private void viewImageSourcePicker() {
-        ImageSourcePicker frag = (ImageSourcePicker)getFragmentManager().findFragmentByTag(ImageSourcePicker.FRAG_TAG);
-        if (frag == null) {
-            frag = ImageSourcePicker.newInstance();
-            frag.show(getFragmentManager(), ImageSourcePicker.FRAG_TAG);
-        }
-    }
-
-    private void addEye() {
-        //create new eye and set listeners
-        GooglyEyeWidget eye = Optometrist.INSTANCE.makeEye(this, new GooglyEyeWidget.Listener() {
-            @Override
-            public void removeView(GooglyEyeWidget eye) {
-//                mImageFrame.removeView(eye);
-            }
-
-            @Override
-            public void updateVals(double x, double z) {
-                xVal.setText("X = " + Double.toString(x));
-                zVal.setText("Z = " + Double.toString(z));
-
-            }
-        });
-//        mImageFrame.addView(eye);
-    }
-
-    ProgressDialog pd;
-
-    public void showProgress(String message) {
-        if (pd == null) {
-            pd = new ProgressDialog(this);
-            pd.setMessage(message);
-            pd.setCancelable(false);
-            pd.setIndeterminate(true);
-            pd.show();
-        }
-    }
-
-    public void hideProgress() {
-        if (pd != null) {
-            try {
-                pd.dismiss();
-            } catch (IllegalArgumentException e) {
-                //FIXME: I think this works but is bad practice
-                //Got the idea here: http://stackoverflow.com/questions/2745061/java-lang-illegalargumentexception-view-not-attached-to-window-manager
-                //After getting an error from this line
-            } finally {
-                pd = null;
-            }
-        }
     }
 }

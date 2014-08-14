@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.djh.googlyeyes.widgets.SlidingRelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:custom="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent" android:layout_height="match_parent">
 
@@ -11,16 +12,6 @@
         android:id="@+id/cropBox"
         android:background="@drawable/dashed_square">
 
-        <!--<com.djh.googlyeyes.widgets.TouchImageView-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:id="@+id/imageView"/>-->
-
-        <!--<com.djh.googlyeyes.widgets.CropWidget-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:id="@+id/cropper"/>-->
-
         <com.edmodo.cropper.CropImageView
             android:id="@+id/CropImageView"
             android:layout_width="match_parent"
@@ -29,4 +20,34 @@
 
     </RelativeLayout>
 
-</RelativeLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/instructionSlide"
+        android:background="@color/instruction_slide_bg">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/cropInstructions"
+            android:text="Drag and resize box to crop image"
+            android:textColor="@android:color/white"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp"
+            android:layout_centerInParent="true"
+            android:textSize="20sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/nextInstruction"
+            android:text="Click next when finished"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:layout_marginTop="10dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"/>
+
+        </RelativeLayout>
+
+</com.djh.googlyeyes.widgets.SlidingRelativeLayout>
