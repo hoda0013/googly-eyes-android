@@ -4,7 +4,7 @@
     android:shape="rectangle">
 
     <stroke
-        android:color="#000000"
+        android:color="#D3F96B"
         android:dashWidth="10dp"
         android:dashGap="10dp" />
 
