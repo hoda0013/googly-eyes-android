@@ -287,15 +287,35 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
             try {
-                if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
-                    return false;
-                // right to left swipe
-                if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                    Toast.makeText(mContext, getResources().getString(R.string.eye_deleted), Toast.LENGTH_SHORT).show();
-                    flingOffScreen(true);
-                } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                    Toast.makeText(mContext, getResources().getString(R.string.eye_deleted), Toast.LENGTH_SHORT).show();
-                    flingOffScreen(false);
+//                if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
+//                    return false;
+                if (thisEye.getMode() != Mode.RESIZING_LOWER_RIGHT) {
+                    if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH) {
+                        if (Math.abs(e1.getX() - e2.getX()) > SWIPE_MAX_OFF_PATH) {
+                            return false;
+                        } else {
+                            if (e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
+                                //swipe bottom to top
+                                Toast.makeText(mContext, getResources().getString(R.string.eye_deleted), Toast.LENGTH_SHORT).show();
+                                flingUp(true);
+                            } else if (e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
+                                //swipe top to bottom
+                                Toast.makeText(mContext, getResources().getString(R.string.eye_deleted), Toast.LENGTH_SHORT).show();
+                                flingUp(false);
+                            }
+                        }
+                    } else {
+                        if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                            //swipe right to left
+                            Toast.makeText(mContext, getResources().getString(R.string.eye_deleted), Toast.LENGTH_SHORT).show();
+                            flingLeft(true);
+                        } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                            //swipe left to right
+                            Toast.makeText(mContext, getResources().getString(R.string.eye_deleted), Toast.LENGTH_SHORT).show();
+                            flingLeft(false);
+                        }
+                    }
+
                 }
             } catch (Exception e) {
 
@@ -370,7 +390,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
 
     }
 
-    public void flingOffScreen(final boolean isFlingLeft) {
+    public void flingLeft(final boolean isFlingLeft) {
         final int distance = 1000;
         ValueAnimator animator = ValueAnimator.ofFloat(0,1);
         animator.setDuration(300);
@@ -392,6 +412,50 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
             @Override
             public void onAnimationStart(Animator animation) {
                 
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                Log.e("DONE", "DONE");
+                mListener.removeView(thisEye);
+                Optometrist.INSTANCE.removeEye(thisEye);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+        animator.start();
+    }
+
+    public void flingUp(final boolean isFlingUp) {
+        final int distance = 1000;
+        ValueAnimator animator = ValueAnimator.ofFloat(0,1);
+        animator.setDuration(300);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float value = ((Float) (animation.getAnimatedValue())).floatValue();
+
+                if (isFlingUp) {
+                    boxCornerY = boxCornerY - (int) (value * distance);
+
+                } else {
+                    boxCornerY = boxCornerY + (int) (value * distance);
+                }
+                invalidate();
+            }
+        });
+        animator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+
             }
 
             @Override
