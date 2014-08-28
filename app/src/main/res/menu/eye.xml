@@ -8,8 +8,14 @@
         android:orderInCategory="100"
         android:showAsAction="always" />
 
+    <item android:id="@+id/delete_eye"
+        android:title="Delete Eye"
+        android:orderInCategory="101"
+        android:showAsAction="always"
+        android:visible="false"/>
+
     <item android:id="@+id/next"
         android:title="NEXT"
-        android:orderInCategory="101"
+        android:orderInCategory="102"
         android:showAsAction="always" />
 </menu>

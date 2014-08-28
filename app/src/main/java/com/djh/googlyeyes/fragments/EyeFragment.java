@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by dillonhodapp on 8/13/14.
@@ -42,8 +43,12 @@ public class EyeFragment extends BaseFragment {
     private RelativeLayout mContainer;
     private RelativeLayout mImageFrame;
     private RelativeLayout instructionSlide;
+    private RelativeLayout banner;
 
     private boolean hasSeenPreviewSlide = false;
+    int[] savedEyeX;
+    int[] savedEyeY;
+    int[] savedEyeSize;
 
     public interface Listener {
         public void onNextClicked(Uri uri);
@@ -69,30 +74,86 @@ public class EyeFragment extends BaseFragment {
             mImageUri = Uri.parse(getArguments().getString(KEY_URI));
         }
 
-        if (savedInstanceState != null) {
-            mImageUri = Uri.parse(savedInstanceState.getString(KEY_URI));
-        }
+//        if (savedInstanceState != null) {
+//            mImageUri = Uri.parse(savedInstanceState.getString(KEY_URI));
+//            if (savedInstanceState.getBundle(KEY_EYE_BUNDLE) != null) {
+//                savedEyeX = savedInstanceState.getIntArray(KEY_EYE_X);
+//                savedEyeY = savedInstanceState.getIntArray(KEY_EYE_Y);
+//                savedEyeSize = savedInstanceState.getIntArray(KEY_EYE_SIZE);
+//            }
+//        }
+
         setHasOptionsMenu(true);
     }
+
+    private static final String KEY_EYE_X = "KEY_EYE_X";
+    private static final String KEY_EYE_Y = "KEY_EYE_Y";
+    private static final String KEY_EYE_SIZE = "KEY_EYE_SIZE";
+    private static final String KEY_EYE_BUNDLE = "KEY_EYE_BUNDLE";
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(KEY_URI, mImageUri.toString());
+
+        List<GooglyEyeWidget> list = Optometrist.INSTANCE.getEyeList();
+
+        if (!list.isEmpty()) {
+            int[] xArray = new int[list.size()];
+            int[] yArray = new int[list.size()];
+            int[] sizeArray = new int[list.size()];
+
+            for (int i = 0; i < list.size(); i++) {
+                xArray[i] = list.get(i).getBoxCornerX();
+                yArray[i] = list.get(i).getBoxCornerY();
+                sizeArray[i] = list.get(i).getBoxWidth();
+            }
+
+            Bundle bundle = new Bundle();
+            bundle.putIntArray(KEY_EYE_X, xArray);
+            bundle.putIntArray(KEY_EYE_Y, yArray);
+            bundle.putIntArray(KEY_EYE_SIZE, sizeArray);
+            outState.putBundle(KEY_EYE_BUNDLE, bundle);
+            mImageFrame.removeAllViews();
+            Optometrist.INSTANCE.removeAllEyes();
+            imageView.setImageURI(null);
+        }
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            mImageUri = Uri.parse(savedInstanceState.getString(KEY_URI));
+            if (savedInstanceState.getBundle(KEY_EYE_BUNDLE) != null) {
+                Bundle bundle = savedInstanceState.getBundle(KEY_EYE_BUNDLE);
+                savedEyeX = bundle.getIntArray(KEY_EYE_X);
+                savedEyeY = bundle.getIntArray(KEY_EYE_Y);
+                savedEyeSize = bundle.getIntArray(KEY_EYE_SIZE);
+                Log.e("CLEARING BUNDLE", "");
+                savedInstanceState.getBundle(KEY_EYE_BUNDLE).clear();
+            }
+        }
+
         View view = inflater.inflate(R.layout.fragment_eye, container, false);
         imageView = (ImageView) view.findViewById(R.id.imageView);
         imageView.setImageURI(mImageUri);
         mContainer = (RelativeLayout) view.findViewById(R.id.container);
         mImageFrame = (RelativeLayout) view.findViewById(R.id.imageFrame);
         instructionSlide = (RelativeLayout) view.findViewById(R.id.instructionSlide);
+        banner = (RelativeLayout) view.findViewById(R.id.banner);
+        banner.setVisibility(View.INVISIBLE);
 
         getActivity().getActionBar().setTitle("ADD ZEE GOOGLYS");
         getActivity().getActionBar().setHomeButtonEnabled(true);
         getActivity().getActionBar().setLogo(R.drawable.ic_back_button);
+
+        if (savedEyeX != null && savedEyeX.length > 0) {
+            for (int i = 0; i < savedEyeX.length; i++) {
+                addSavedEye(savedEyeX[i], savedEyeY[i], savedEyeSize[i]);
+            }
+        }
+
         return view;
     }
 
@@ -132,6 +193,8 @@ public class EyeFragment extends BaseFragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.add_eye) {
             addEye();
+        } else if (item.getItemId() == R.id.delete_eye){
+             //TODO: add code to handle delete eye press
         } else if (item.getItemId() == R.id.next) {
             //Save image with eyes to GooglyEye dir, pass forward to preview fragment
             File file = saveImage();
@@ -150,21 +213,34 @@ public class EyeFragment extends BaseFragment {
         return false;
     }
 
+    GooglyEyeWidget.Listener eyeListener = new GooglyEyeWidget.Listener() {
+        @Override
+        public void removeView(GooglyEyeWidget eye) {
+            mImageFrame.removeView(eye);
+        }
+
+        @Override
+        public void updateVals(double x, double z) {
+
+        }
+
+        @Override
+        public void onFocus() {
+
+        }
+
+        @Override
+        public void onUnfocus() {
+
+        }
+    };
+
     private void addEye() {
-        //create new eye and set listeners
-        GooglyEyeWidget eye = Optometrist.INSTANCE.makeEye(getActivity(), new GooglyEyeWidget.Listener() {
-            @Override
-            public void removeView(GooglyEyeWidget eye) {
-                mImageFrame.removeView(eye);
-            }
+        mImageFrame.addView(Optometrist.INSTANCE.makeEye(getActivity(), eyeListener));
+    }
 
-            @Override
-            public void updateVals(double x, double z) {
-
-            }
-
-        });
-        mImageFrame.addView(eye);
+    private void addSavedEye(int x, int y, int size) {
+        mImageFrame.addView(Optometrist.INSTANCE.makeEye(getActivity(), eyeListener, x, y, size));
     }
 
         private File saveImage() {
@@ -181,7 +257,7 @@ public class EyeFragment extends BaseFragment {
             if (!f.getParentFile().exists()) {
                 f.getParentFile().mkdirs();
             }
-
+            banner.setVisibility(View.VISIBLE);
             //Grab bitmap of image
             mImageFrame.setDrawingCacheEnabled(true);
             Bitmap bitmap = Bitmap.createBitmap(mImageFrame.getDrawingCache());

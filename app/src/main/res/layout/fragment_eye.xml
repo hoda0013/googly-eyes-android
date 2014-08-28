@@ -19,6 +19,44 @@
             android:id="@+id/imageView"
             android:layout_centerInParent="true"/>
 
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:background="@color/instruction_slide_bg"
+            android:id="@+id/banner">
+
+            <ImageView
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:id="@+id/leftImage"
+                android:src="@drawable/ic_launcher"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@+id/leftImage"
+                android:layout_toLeftOf="@+id/rightImage"
+                android:paddingRight="10dp"
+                android:paddingLeft="10dp"
+                android:gravity="center"
+                android:text="Made using GOOGLY EYES app. Find us on the Play Store."
+                android:textColor="@color/bounding_box_handle"
+                android:layout_centerInParent="true"/>
+
+            <ImageView
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:id="@+id/rightImage"
+                android:src="@drawable/ic_launcher"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"/>
+
+            </RelativeLayout>
+
+
+
     </RelativeLayout>
 
     <RelativeLayout

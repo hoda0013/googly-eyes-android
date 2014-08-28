@@ -12,6 +12,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -58,9 +60,12 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     private int pupilRadius;
     private Mode mMode;
 
+
     public interface Listener {
         public void removeView(GooglyEyeWidget eye);
         public void updateVals(double x, double z);
+        public void onFocus();
+        public void onUnfocus();
     }
 
     public enum Mode {
@@ -209,7 +214,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     @Override
     public boolean onTouchEvent(MotionEvent event) {
 
-            Log.e(String.format("BOX: %s", this.getId()), "TRUE");
+//            Log.e(String.format("BOX: %s", this.getId()), "TRUE");
             float eventX = event.getX();
             float eventY = event.getY();
 
@@ -218,8 +223,8 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
                     tempX = eventX;
                     tempY = eventY;
 
-                    Log.e("XTOUCH", String.valueOf(eventX));
-                    Log.e("YTOUCH", String.valueOf(eventY));
+//                    Log.e("XTOUCH", String.valueOf(eventX));
+//                    Log.e("YTOUCH", String.valueOf(eventY));
 
                     if (isTouchingResizer(eventX, eventY) && getMode() != GooglyEyeWidget.Mode.PLACED) {
                         setMode(GooglyEyeWidget.Mode.RESIZING_LOWER_RIGHT);
@@ -481,5 +486,10 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     public int getBoxWidth() {
         return boxWidth;
     }
+    public int getBoxCornerX() { return boxCornerX; }
+    public int getBoxCornerY() { return boxCornerY; }
+    public void setBoxCornerX(int x) { boxCornerX = x; }
+    public void setBoxCornerY(int y) { boxCornerY = y; }
+    public void setBoxWidth(int s) { boxWidth = s; }
 
 }

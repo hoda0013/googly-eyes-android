@@ -1,6 +1,7 @@
 package com.djh.googlyeyes.widgets;
 
 import android.content.Context;
+import android.os.Bundle;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,14 @@ public class Optometrist {
         eye.setId(eyeList.size());
         eyeList.add(eye);
         getFocus(eye.getId());
+        return eye;
+    }
+
+    public GooglyEyeWidget makeEye(Context context, GooglyEyeWidget.Listener listener, int x, int y, int size) {
+        GooglyEyeWidget eye = makeEye(context, listener);
+        eye.setBoxWidth(size);
+        eye.setBoxCornerX(x);
+        eye.setBoxCornerY(y);
         return eye;
     }
 
@@ -62,6 +71,10 @@ public class Optometrist {
         }
 
         return false;
+    }
+
+    public List<GooglyEyeWidget> getEyeList() {
+        return eyeList;
     }
 
 }
