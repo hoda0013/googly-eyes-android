@@ -64,7 +64,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
     public interface Listener {
         public void removeView(GooglyEyeWidget eye);
         public void updateVals(double x, double z);
-        public void onFocus();
+        public void onFocus(GooglyEyeWidget eye);
         public void onUnfocus();
     }
 
@@ -228,16 +228,20 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
 
                     if (isTouchingResizer(eventX, eventY) && getMode() != GooglyEyeWidget.Mode.PLACED) {
                         setMode(GooglyEyeWidget.Mode.RESIZING_LOWER_RIGHT);
+                        mListener.onFocus(this);
                         gestureDetector.onTouchEvent(event);
                     } else if (isTouchingDragPoint(eventX, eventY) && getMode() != GooglyEyeWidget.Mode.PLACED) {
+                        mListener.onFocus(this);
                         setMode(GooglyEyeWidget.Mode.DRAGGING);
                         gestureDetector.onTouchEvent(event);
                     } else if (isTouchingSclera(eventX, eventY)) {
                         setMode(GooglyEyeWidget.Mode.DRAGGING);
                         Optometrist.INSTANCE.getFocus(getId());
+                        mListener.onFocus(this);
                         gestureDetector.onTouchEvent(event);
                     } else {
                         //touch event did not hit the eye
+                        mListener.onUnfocus();
                         setMode(GooglyEyeWidget.Mode.PLACED);
                         return false;
                     }
@@ -247,11 +251,10 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
                     if (getMode() == GooglyEyeWidget.Mode.DRAGGING) {
                         int deltaX = (int) (eventX - tempX);
                         int deltaY = (int) (eventY - tempY);
-
                         setDraggingCoords(deltaX, deltaY);
-
                         tempX = eventX;
                         tempY = eventY;
+                        mListener.onFocus(this);
                         gestureDetector.onTouchEvent(event);
                         return true;
                     } else if (getMode() == GooglyEyeWidget.Mode.RESIZING_LOWER_RIGHT) {
@@ -267,6 +270,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
                         resizeLowerRight(delta);
                         tempX = eventX;
                         tempY = eventY;
+                        mListener.onFocus(this);
                         gestureDetector.onTouchEvent(event);
                         return true;
                     } else {
@@ -274,7 +278,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
                     }
                 case MotionEvent.ACTION_UP:
                     setMode(GooglyEyeWidget.Mode.EDITING);
-                    mListener.onFocus();
+                    mListener.onFocus(this);
                     gestureDetector.onTouchEvent(event);
                     return true;
 
@@ -425,6 +429,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
                 Log.e("DONE", "DONE");
                 mListener.removeView(thisEye);
                 Optometrist.INSTANCE.removeEye(thisEye);
+                mListener.onUnfocus();
             }
 
             @Override
@@ -469,6 +474,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
                 Log.e("DONE", "DONE");
                 mListener.removeView(thisEye);
                 Optometrist.INSTANCE.removeEye(thisEye);
+                mListener.onUnfocus();
             }
 
             @Override

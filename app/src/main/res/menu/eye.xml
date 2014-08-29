@@ -12,7 +12,7 @@
         android:title="Delete Eye"
         android:orderInCategory="101"
         android:showAsAction="always"
-        android:visible="false"/>
+        android:enabled="false"/>
 
     <item android:id="@+id/next"
         android:title="NEXT"

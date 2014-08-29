@@ -41,6 +41,7 @@ public class Optometrist {
         eye.setBoxWidth(size);
         eye.setBoxCornerX(x);
         eye.setBoxCornerY(y);
+        eye.setMode(GooglyEyeWidget.Mode.PLACED);
         return eye;
     }
 

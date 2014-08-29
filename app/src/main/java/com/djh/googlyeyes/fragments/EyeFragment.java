@@ -45,7 +45,8 @@ public class EyeFragment extends BaseFragment {
     private RelativeLayout mImageFrame;
     private RelativeLayout instructionSlide;
     private RelativeLayout banner;
-
+    private boolean isEyeHighlighted = false;
+    private GooglyEyeWidget currentEye = null;
     private boolean hasSeenPreviewSlide = false;
     int[] savedEyeX;
     int[] savedEyeY;
@@ -192,11 +193,22 @@ public class EyeFragment extends BaseFragment {
     }
 
     @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        if (isEyeHighlighted) {
+            menu.getItem(1).setEnabled(true);
+        } else {
+            menu.getItem(1).setEnabled(false);
+        }
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.add_eye) {
             addEye();
         } else if (item.getItemId() == R.id.delete_eye){
-             //TODO: add code to handle delete eye press
+            Optometrist.INSTANCE.removeEye(currentEye);
+            mImageFrame.removeView(currentEye);
+            currentEye = null;
         } else if (item.getItemId() == R.id.next) {
             ((MainActivity)getActivity()).showProgress();
             //Save image with eyes to GooglyEye dir, pass forward to preview fragment
@@ -228,18 +240,25 @@ public class EyeFragment extends BaseFragment {
         }
 
         @Override
-        public void onFocus() {
+        public void onFocus(GooglyEyeWidget eye) {
+            currentEye = eye;
+            isEyeHighlighted = true;
             getActivity().invalidateOptionsMenu();
         }
 
         @Override
         public void onUnfocus() {
-
+            currentEye = null;
+            isEyeHighlighted = false;
+            getActivity().invalidateOptionsMenu();
         }
     };
 
     private void addEye() {
-        mImageFrame.addView(Optometrist.INSTANCE.makeEye(getActivity(), eyeListener));
+        currentEye = Optometrist.INSTANCE.makeEye(getActivity(), eyeListener);
+        mImageFrame.addView(currentEye);
+        isEyeHighlighted = true;
+        getActivity().invalidateOptionsMenu();
     }
 
     private void addSavedEye(int x, int y, int size) {
