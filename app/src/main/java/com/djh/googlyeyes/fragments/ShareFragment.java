@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.djh.googlyeyes.R;
+import com.djh.googlyeyes.activities.MainActivity;
 
 /**
  * Created by dillonhodapp on 8/13/14.
@@ -112,6 +113,7 @@ public class ShareFragment extends BaseFragment{
                 mListener.onDoneClicked();
             }
         });
+
     }
 
     @Override

@@ -17,6 +17,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,7 +46,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
     public static final int CAMERA_REQUEST_CODE = 4;
 
     private Uri imageUri;
-    RelativeLayout mContainer;
+    FrameLayout mContainer;
+    ProgressBar mProgressBar;
 
     private File f = null;
     private Context mContext;
@@ -108,14 +111,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
         return super.onOptionsItemSelected(item);
     }
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mContainer = (RelativeLayout) findViewById(R.id.container);
-
+        mContainer = (FrameLayout) findViewById(R.id.container);
+        mProgressBar = (ProgressBar) findViewById(R.id.loading_spinner);
+        mProgressBar.setVisibility(View.VISIBLE);
         getActionBar().setTitle("GOOGLY EYES");
         getActionBar().setIcon(R.drawable.ic_actionbar_icon);
         mContext = this;
@@ -204,7 +206,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
             frag = ShareFragment.newInstance(uri);
         }
 
-        replaceFragment(frag, frag.FRAG_TAG, mContainer.getId(), true);
+        replaceFragment(frag, frag.FRAG_TAG, mContainer.getId(), true, mProgressBar);
     }
 
     private void viewCropFragment(Uri uri) {
@@ -214,7 +216,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
             frag = CropFragment.newInstance(uri);
         }
 
-        replaceFragment(frag, frag.FRAG_TAG, mContainer.getId(), true);
+        replaceFragment(frag, frag.FRAG_TAG, mContainer.getId(), true, mProgressBar);
     }
 
     private void viewEyeFragment(Uri uri) {
@@ -224,7 +226,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
             frag = EyeFragment.newInstance(uri);
         }
 
-        replaceFragment(frag, frag.FRAG_TAG, mContainer.getId(), true);
+        replaceFragment(frag, frag.FRAG_TAG, mContainer.getId(), true, mProgressBar);
     }
 
     private void viewHomeFragment() {
@@ -234,7 +236,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
             frag = new HomeFragment();
         }
 
-        replaceFragment(frag, frag.FRAG_TAG, mContainer.getId(), false);
+        replaceFragment(frag, frag.FRAG_TAG, mContainer.getId(), false, mProgressBar);
     }
 
     private void takePhoto() {
@@ -364,5 +366,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
     @Override
     public void onClick(View v) {
 
+    }
+
+    public void showProgress() {
+        mProgressBar.setVisibility(View.VISIBLE);
+    }
+
+    public void hideProgress() {
+        mProgressBar.setVisibility(View.INVISIBLE);
     }
 }

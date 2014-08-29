@@ -21,6 +21,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.djh.googlyeyes.R;
+import com.djh.googlyeyes.activities.MainActivity;
 import com.djh.googlyeyes.util.Util;
 import com.djh.googlyeyes.widgets.CropWidget;
 import com.djh.googlyeyes.widgets.TouchImageView;
@@ -162,7 +163,7 @@ public class CropFragment extends BaseFragment{
         boolean success = false;
         try {
             fOut = new FileOutputStream(f);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fOut);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, fOut);
             fOut.flush();
             if (fOut != null) {
                 fOut.close();

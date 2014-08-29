@@ -18,6 +18,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.djh.googlyeyes.R;
+import com.djh.googlyeyes.activities.MainActivity;
 import com.djh.googlyeyes.widgets.GooglyEyeWidget;
 import com.djh.googlyeyes.widgets.Optometrist;
 
@@ -177,6 +178,7 @@ public class EyeFragment extends BaseFragment {
         } else {
             instructionSlide.setVisibility(View.GONE);
         }
+
     }
 
     @Override
