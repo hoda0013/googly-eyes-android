@@ -2,6 +2,7 @@ package com.djh.googlyeyes.widgets;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,8 @@ public class Optometrist {
 
     }
 
+    public int eyeId = 0;
+
     public GooglyEyeWidget makeEye(Context context, GooglyEyeWidget.Listener listener) {
         GooglyEyeWidget eye;
         int nextSize = 50;
@@ -27,7 +30,7 @@ public class Optometrist {
             eye = new GooglyEyeWidget(context);
         }
         eye.setListener(listener);
-        eye.setId(eyeList.size());
+        eye.setId(eyeId++);
         eyeList.add(eye);
         getFocus(eye.getId());
         return eye;
@@ -53,6 +56,9 @@ public class Optometrist {
 
     public void removeEye(GooglyEyeWidget eye) {
         eyeList.remove(eye);
+        for(int i = 0; i < eyeList.size(); i++){
+            Log.e("EYE " + String.valueOf(i), " = String.valueOf(e.getId()))");
+        }
     }
 
     public void removeFocusFromAll() {

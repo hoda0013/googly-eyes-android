@@ -198,6 +198,7 @@ public class EyeFragment extends BaseFragment {
         } else if (item.getItemId() == R.id.delete_eye){
              //TODO: add code to handle delete eye press
         } else if (item.getItemId() == R.id.next) {
+            ((MainActivity)getActivity()).showProgress();
             //Save image with eyes to GooglyEye dir, pass forward to preview fragment
             File file = saveImage();
             if (file == null) {
@@ -228,7 +229,7 @@ public class EyeFragment extends BaseFragment {
 
         @Override
         public void onFocus() {
-
+            getActivity().invalidateOptionsMenu();
         }
 
         @Override

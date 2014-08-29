@@ -136,7 +136,7 @@ public class CropFragment extends BaseFragment{
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.next) {
-
+            ((MainActivity)getActivity()).showProgress();
             //Grag screenshot from cropping tool
             Bitmap bitmap = mCropImageView.getCroppedImage();
 

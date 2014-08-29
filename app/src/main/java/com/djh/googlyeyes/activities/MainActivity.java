@@ -19,8 +19,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.djh.googlyeyes.fragments.CropFragment;
@@ -183,7 +181,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
         } else if (requestCode == SELECT_PICTURE){
             if (resultCode == RESULT_OK) {
                 imageUri = data.getData();
-                viewCropFragment(imageUri);
+                if (imageUri != null) {
+                    viewCropFragment(imageUri);
+                } else {
+                    Log.i("IMAGE", "CANCELLED" );
+                }
             } else if(resultCode == RESULT_CANCELED){
                 Log.i("IMAGE", "CANCELLED" );
             }
@@ -191,8 +193,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
         } else if(requestCode == SELECT_PICURE_KITKAT){
             if(resultCode == RESULT_OK) {
                 imageUri = data.getData();
-                makeImageUri(data, imageUri);
-                viewCropFragment(imageUri);
+                if (imageUri != null) {
+                    makeImageUri(data, imageUri);
+                    viewCropFragment(imageUri);
+                } else {
+                    Log.i("IMAGE", "CANCELLED" );
+                }
             } else if(resultCode == RESULT_CANCELED){
                 Log.i("IMAGE", "CANCELLED" );
             }

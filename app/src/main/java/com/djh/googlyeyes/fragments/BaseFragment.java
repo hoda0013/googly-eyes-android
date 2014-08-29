@@ -16,17 +16,17 @@ public class BaseFragment extends Fragment {
 
     @Override
     public Animator onCreateAnimator(int transit, boolean enter, int nextAnim) {
+        getFragmentManager();
         Animator animator;
         if (enter) {
             animator = AnimatorInflater.loadAnimator(getActivity(), R.animator.slide_in_r_to_l);
         } else {
-            animator = AnimatorInflater.loadAnimator(getActivity(), R.animator.slide_out_r_to_l);
+            animator = AnimatorInflater.loadAnimator(getActivity(), R.animator.slide_pop_exit);
         }
 
         animator.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
-                ((MainActivity)getActivity()).showProgress();
             }
 
             @Override

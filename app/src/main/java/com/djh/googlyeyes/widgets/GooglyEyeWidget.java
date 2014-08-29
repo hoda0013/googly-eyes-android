@@ -274,6 +274,7 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
                     }
                 case MotionEvent.ACTION_UP:
                     setMode(GooglyEyeWidget.Mode.EDITING);
+                    mListener.onFocus();
                     gestureDetector.onTouchEvent(event);
                     return true;
 
