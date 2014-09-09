@@ -72,7 +72,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
         mContainer = (RelativeLayout) findViewById(R.id.container);
         mImageView = (ImageView) findViewById(R.id.imageView);
         mImageView.setImageResource(R.drawable.ben_bg);
-        mSnapshot = (RelativeLayout) findViewById(R.id.snapshot);
+//        mSnapshot = (RelativeLayout) findViewById(R.id.snapshot);
 //        mSnapshot.setDrawingCacheEnabled(true);
 
         mContext = this;
