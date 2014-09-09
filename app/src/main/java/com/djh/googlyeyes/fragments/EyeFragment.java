@@ -37,6 +37,7 @@ public class EyeFragment extends BaseFragment {
     public static final String FRAG_TAG = "com.djh.googlyeyes.fragments.EyeFragment.FRAG_TAG";
     public static final String KEY_URI = "com.djh.googleeyes.fragments.EyeFragment.KEY_URI";
     public static final String KEY_HAS_SEEN_SLIDESHOW = "com.djh.googlyeyes.fragments.EyeFragment.KEY_HAS_SEEN_SLIDESHOW";
+    public static final String KEY_FILENAME = "com.djh.googleeyes.fragments.EyeFragment.KEY_FILENAME";
 
     private Uri mImageUri = null;
     private Listener mListener;
@@ -76,6 +77,10 @@ public class EyeFragment extends BaseFragment {
         if (getArguments() != null && getArguments().getString(KEY_URI) != null) {
             mImageUri = Uri.parse(getArguments().getString(KEY_URI));
         }
+        if (savedInstanceState == null) {
+            filename = Environment.getExternalStorageDirectory().toString() + "/" + getString(R.string.photo_directory) + "/"
+                    + System.currentTimeMillis() + ".jpg";
+        }
 
 //        if (savedInstanceState != null) {
 //            mImageUri = Uri.parse(savedInstanceState.getString(KEY_URI));
@@ -98,6 +103,7 @@ public class EyeFragment extends BaseFragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(KEY_URI, mImageUri.toString());
+        outState.putString(KEY_FILENAME, filename);
         saveEyesToDb();
         Optometrist.INSTANCE.removeAllEyes();
 //        List<GooglyEyeWidget> list = Optometrist.INSTANCE.getEyeList();
@@ -131,6 +137,7 @@ public class EyeFragment extends BaseFragment {
 
         if (savedInstanceState != null) {
             mImageUri = Uri.parse(savedInstanceState.getString(KEY_URI));
+            filename = savedInstanceState.getString(KEY_FILENAME);
 //            if (savedInstanceState.getBundle(KEY_EYE_BUNDLE) != null) {
 //                Bundle bundle = savedInstanceState.getBundle(KEY_EYE_BUNDLE);
 //                savedEyeX = bundle.getIntArray(KEY_EYE_X);
@@ -139,7 +146,7 @@ public class EyeFragment extends BaseFragment {
 //                Log.e("CLEARING BUNDLE", "");
 //                savedInstanceState.getBundle(KEY_EYE_BUNDLE).clear();
 //            }
-            savedEyes = Eye.find(Eye.class, "uri = ?", mImageUri.toString());
+            savedEyes = Eye.find(Eye.class, "filename = ?", filename);
 
         }
 
@@ -285,7 +292,7 @@ public class EyeFragment extends BaseFragment {
 
     private void saveEyesToDb() {
         List<GooglyEyeWidget> list = Optometrist.INSTANCE.getEyeList();
-            List<Eye> currentEyes = Eye.find(Eye.class, "uri = ?", mImageUri.toString());
+        List<Eye> currentEyes = Eye.find(Eye.class, "filename = ?", filename);
         for (Eye eye : currentEyes) {
             eye.delete();
         }
@@ -295,6 +302,7 @@ public class EyeFragment extends BaseFragment {
             eye.eyeY = list.get(i).getBoxCornerY();
             eye.eyeSize = list.get(i).getBoxWidth();
             eye.uri = mImageUri.toString();
+            eye.filename = filename;
             eye.save();
         }
     }

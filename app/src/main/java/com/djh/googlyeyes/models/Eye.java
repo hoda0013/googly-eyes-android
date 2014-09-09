@@ -14,8 +14,6 @@ public class Eye extends SugarRecord<Eye> {
     public int eyeY;
     public int eyeSize;
     public String uri;
-
+    public String filename;
     public Eye(){}
-
-
 }
