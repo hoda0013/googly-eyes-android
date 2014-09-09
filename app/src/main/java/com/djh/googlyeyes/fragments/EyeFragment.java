@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.djh.googlyeyes.R;
 import com.djh.googlyeyes.activities.MainActivity;
+import com.djh.googlyeyes.models.Eye;
 import com.djh.googlyeyes.widgets.GooglyEyeWidget;
 import com.djh.googlyeyes.widgets.Optometrist;
 
@@ -37,7 +38,6 @@ public class EyeFragment extends BaseFragment {
     public static final String KEY_URI = "com.djh.googleeyes.fragments.EyeFragment.KEY_URI";
     public static final String KEY_HAS_SEEN_SLIDESHOW = "com.djh.googlyeyes.fragments.EyeFragment.KEY_HAS_SEEN_SLIDESHOW";
 
-
     private Uri mImageUri = null;
     private Listener mListener;
     private ImageView imageView;
@@ -48,9 +48,10 @@ public class EyeFragment extends BaseFragment {
     private boolean isEyeHighlighted = false;
     private GooglyEyeWidget currentEye = null;
     private boolean hasSeenPreviewSlide = false;
-    int[] savedEyeX;
-    int[] savedEyeY;
-    int[] savedEyeSize;
+    private String filename;
+//    int[] savedEyeX;
+//    int[] savedEyeY;
+//    int[] savedEyeSize;
 
     public interface Listener {
         public void onNextClicked(Uri uri);
@@ -97,44 +98,49 @@ public class EyeFragment extends BaseFragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(KEY_URI, mImageUri.toString());
-
-        List<GooglyEyeWidget> list = Optometrist.INSTANCE.getEyeList();
-
-        if (!list.isEmpty()) {
-            int[] xArray = new int[list.size()];
-            int[] yArray = new int[list.size()];
-            int[] sizeArray = new int[list.size()];
-
-            for (int i = 0; i < list.size(); i++) {
-                xArray[i] = list.get(i).getBoxCornerX();
-                yArray[i] = list.get(i).getBoxCornerY();
-                sizeArray[i] = list.get(i).getBoxWidth();
-            }
-
-            Bundle bundle = new Bundle();
-            bundle.putIntArray(KEY_EYE_X, xArray);
-            bundle.putIntArray(KEY_EYE_Y, yArray);
-            bundle.putIntArray(KEY_EYE_SIZE, sizeArray);
-            outState.putBundle(KEY_EYE_BUNDLE, bundle);
-            mImageFrame.removeAllViews();
-            Optometrist.INSTANCE.removeAllEyes();
-            imageView.setImageURI(null);
-        }
+        saveEyesToDb();
+        Optometrist.INSTANCE.removeAllEyes();
+//        List<GooglyEyeWidget> list = Optometrist.INSTANCE.getEyeList();
+//
+//        if (!list.isEmpty()) {
+//            int[] xArray = new int[list.size()];
+//            int[] yArray = new int[list.size()];
+//            int[] sizeArray = new int[list.size()];
+//
+//            for (int i = 0; i < list.size(); i++) {
+//                xArray[i] = list.get(i).getBoxCornerX();
+//                yArray[i] = list.get(i).getBoxCornerY();
+//                sizeArray[i] = list.get(i).getBoxWidth();
+//            }
+//
+//            Bundle bundle = new Bundle();
+//            bundle.putIntArray(KEY_EYE_X, xArray);
+//            bundle.putIntArray(KEY_EYE_Y, yArray);
+//            bundle.putIntArray(KEY_EYE_SIZE, sizeArray);
+//            outState.putBundle(KEY_EYE_BUNDLE, bundle);
+//            mImageFrame.removeAllViews();
+//            Optometrist.INSTANCE.removeAllEyes();
+//            imageView.setImageURI(null);
+//        }
 
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        List<Eye> savedEyes = null;
+
         if (savedInstanceState != null) {
             mImageUri = Uri.parse(savedInstanceState.getString(KEY_URI));
-            if (savedInstanceState.getBundle(KEY_EYE_BUNDLE) != null) {
-                Bundle bundle = savedInstanceState.getBundle(KEY_EYE_BUNDLE);
-                savedEyeX = bundle.getIntArray(KEY_EYE_X);
-                savedEyeY = bundle.getIntArray(KEY_EYE_Y);
-                savedEyeSize = bundle.getIntArray(KEY_EYE_SIZE);
-                Log.e("CLEARING BUNDLE", "");
-                savedInstanceState.getBundle(KEY_EYE_BUNDLE).clear();
-            }
+//            if (savedInstanceState.getBundle(KEY_EYE_BUNDLE) != null) {
+//                Bundle bundle = savedInstanceState.getBundle(KEY_EYE_BUNDLE);
+//                savedEyeX = bundle.getIntArray(KEY_EYE_X);
+//                savedEyeY = bundle.getIntArray(KEY_EYE_Y);
+//                savedEyeSize = bundle.getIntArray(KEY_EYE_SIZE);
+//                Log.e("CLEARING BUNDLE", "");
+//                savedInstanceState.getBundle(KEY_EYE_BUNDLE).clear();
+//            }
+            savedEyes = Eye.find(Eye.class, "uri = ?", mImageUri.toString());
+
         }
 
         View view = inflater.inflate(R.layout.fragment_eye, container, false);
@@ -150,11 +156,17 @@ public class EyeFragment extends BaseFragment {
         getActivity().getActionBar().setHomeButtonEnabled(true);
         getActivity().getActionBar().setLogo(R.drawable.ic_back_button);
 
-        if (savedEyeX != null && savedEyeX.length > 0) {
-            for (int i = 0; i < savedEyeX.length; i++) {
-                addSavedEye(savedEyeX[i], savedEyeY[i], savedEyeSize[i]);
+        if (savedEyes != null) {
+            for (int i = 0; i < savedEyes.size(); i++) {
+                addSavedEye(savedEyes.get(i));
             }
         }
+//        if (savedEyeX != null && savedEyeX.length > 0) {
+//            for (int i = 0; i < savedEyeX.length; i++) {
+//                addSavedEye(savedEyeX[i], savedEyeY[i], savedEyeSize[i]);
+//            }
+//        }
+
 
         return view;
     }
@@ -203,6 +215,12 @@ public class EyeFragment extends BaseFragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
+        instructionSlide.setVisibility(View.GONE);
+        //Mark slide as having been seen before
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        sp.edit().putBoolean(KEY_HAS_SEEN_SLIDESHOW, true).apply();
+
         if (item.getItemId() == R.id.add_eye) {
             addEye();
         } else if (item.getItemId() == R.id.delete_eye){
@@ -261,8 +279,28 @@ public class EyeFragment extends BaseFragment {
         getActivity().invalidateOptionsMenu();
     }
 
-    private void addSavedEye(int x, int y, int size) {
-        mImageFrame.addView(Optometrist.INSTANCE.makeEye(getActivity(), eyeListener, x, y, size));
+//    private void addSavedEye(int x, int y, int size) {
+//        mImageFrame.addView(Optometrist.INSTANCE.makeEye(getActivity(), eyeListener, x, y, size));
+//    }
+
+    private void saveEyesToDb() {
+        List<GooglyEyeWidget> list = Optometrist.INSTANCE.getEyeList();
+            List<Eye> currentEyes = Eye.find(Eye.class, "uri = ?", mImageUri.toString());
+        for (Eye eye : currentEyes) {
+            eye.delete();
+        }
+        for (int i = 0; i < list.size(); i++) {
+            Eye eye = new Eye();
+            eye.eyeX = list.get(i).getBoxCornerX();
+            eye.eyeY = list.get(i).getBoxCornerY();
+            eye.eyeSize = list.get(i).getBoxWidth();
+            eye.uri = mImageUri.toString();
+            eye.save();
+        }
+    }
+
+    private void addSavedEye(Eye eye) {
+        mImageFrame.addView(Optometrist.INSTANCE.makeEye(getActivity(), eyeListener, eye.eyeX, eye.eyeY, eye.eyeSize));
     }
 
         private File saveImage() {
@@ -271,8 +309,7 @@ public class EyeFragment extends BaseFragment {
             Optometrist.INSTANCE.removeFocusFromAll();
 
             //Create filename
-            String filename = Environment.getExternalStorageDirectory().toString() + "/" + getString(R.string.photo_directory) + "/"
-                    + System.currentTimeMillis() + ".jpg";
+
             File f = new File(filename);
 
             //Find directory, create if doesn't exist
@@ -294,6 +331,8 @@ public class EyeFragment extends BaseFragment {
                 fOut.flush();
                 if (fOut != null) {
                     fOut.close();
+                    //write to db
+
                 }
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -303,6 +342,7 @@ public class EyeFragment extends BaseFragment {
                 Toast.makeText(getActivity(), getString(R.string.problem_saving), Toast.LENGTH_SHORT).show();
             }
 
+           saveEyesToDb();
         return f;
     }
 }
