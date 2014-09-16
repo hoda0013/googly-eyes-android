@@ -23,8 +23,6 @@ import android.widget.Toast;
 import com.djh.googlyeyes.R;
 import com.djh.googlyeyes.activities.MainActivity;
 import com.djh.googlyeyes.util.Util;
-import com.djh.googlyeyes.widgets.CropWidget;
-import com.djh.googlyeyes.widgets.TouchImageView;
 import com.edmodo.cropper.CropImageView;
 
 import java.io.File;

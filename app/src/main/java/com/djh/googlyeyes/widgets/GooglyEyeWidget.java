@@ -23,6 +23,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.djh.googlyeyes.R;
+import com.djh.googlyeyes.fragments.EyeFragment;
 
 /**
  * Created by dillonhodapp on 7/30/14.
@@ -105,6 +106,23 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
         mContext = context;
         units();
         init();
+    }
+
+    public GooglyEyeWidget(Context context, Listener listener) {
+        super(context);
+        mContext = context;
+        mListener = listener;
+        units();
+        init();
+    }
+
+    public GooglyEyeWidget(Context context, Listener listener, int nextSize) {
+        super(context);
+        mContext = context;
+        mListener = listener;
+        units();
+        init();
+        boxWidth = nextSize;
     }
 
     public void setListener(Listener listener) {
@@ -236,7 +254,6 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
                         gestureDetector.onTouchEvent(event);
                     } else if (isTouchingSclera(eventX, eventY)) {
                         setMode(GooglyEyeWidget.Mode.DRAGGING);
-                        Optometrist.INSTANCE.getFocus(getId());
                         mListener.onFocus(this);
                         gestureDetector.onTouchEvent(event);
                     } else {
@@ -428,7 +445,6 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
             public void onAnimationEnd(Animator animation) {
                 Log.e("DONE", "DONE");
                 mListener.removeView(thisEye);
-                Optometrist.INSTANCE.removeEye(thisEye);
                 mListener.onUnfocus();
             }
 
@@ -473,7 +489,6 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
             public void onAnimationEnd(Animator animation) {
                 Log.e("DONE", "DONE");
                 mListener.removeView(thisEye);
-                Optometrist.INSTANCE.removeEye(thisEye);
                 mListener.onUnfocus();
             }
 

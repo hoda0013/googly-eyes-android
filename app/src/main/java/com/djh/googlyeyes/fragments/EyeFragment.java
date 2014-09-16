@@ -1,5 +1,6 @@
 package com.djh.googlyeyes.fragments;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -28,6 +29,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -39,8 +41,11 @@ public class EyeFragment extends BaseFragment {
     public static final String KEY_URI = "com.djh.googleeyes.fragments.EyeFragment.KEY_URI";
     public static final String KEY_HAS_SEEN_SLIDESHOW = "com.djh.googlyeyes.fragments.EyeFragment.KEY_HAS_SEEN_SLIDESHOW";
     public static final String KEY_FILENAME = "com.djh.googleeyes.fragments.EyeFragment.KEY_FILENAME";
+    public static final String KEY_MILLIS = "com.djh.googleeyes.fragments.EyeFragment.KEY_MILLIS";
 
+    private Context mContext;
     private Uri mImageUri = null;
+    private long mMillis = 0;
     private Listener mListener;
     private ImageView imageView;
     private RelativeLayout mContainer;
@@ -51,6 +56,8 @@ public class EyeFragment extends BaseFragment {
     private GooglyEyeWidget currentEye = null;
     private boolean hasSeenPreviewSlide = false;
     private String filename;
+
+    private List<GooglyEyeWidget> mEyes = new ArrayList<GooglyEyeWidget>();
 
     public interface Listener {
         public void onNextClicked(Uri uri);
@@ -72,12 +79,14 @@ public class EyeFragment extends BaseFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.e("ON CREATE", "");
+        mContext = getActivity();
         if (getArguments() != null && getArguments().getString(KEY_URI) != null) {
             mImageUri = Uri.parse(getArguments().getString(KEY_URI));
         }
         if (savedInstanceState == null) {
             filename = Environment.getExternalStorageDirectory().toString() + "/" + getString(R.string.photo_directory) + "/"
                     + System.currentTimeMillis() + ".jpg";
+            mMillis = System.currentTimeMillis();
         }
 
         setHasOptionsMenu(true);
@@ -85,10 +94,9 @@ public class EyeFragment extends BaseFragment {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-
         super.onSaveInstanceState(outState);
         outState.putString(KEY_URI, mImageUri.toString());
-        outState.putString(KEY_FILENAME, filename);
+        outState.putLong(KEY_MILLIS, mMillis);
         saveEyesToDb();
     }
 
@@ -99,26 +107,15 @@ public class EyeFragment extends BaseFragment {
 
         if (savedInstanceState != null) {
             mImageUri = Uri.parse(savedInstanceState.getString(KEY_URI));
-            filename = savedInstanceState.getString(KEY_FILENAME);
-            savedEyes = Eye.find(Eye.class, "filename = ?", filename);
-            Optometrist.INSTANCE.removeAllEyes();
-
+            mMillis = savedInstanceState.getLong(KEY_MILLIS);
+//            savedEyes = Eye.find(Eye.class, "filename = ?", filename);
+//            Optometrist.INSTANCE.removeAllEyes();
         }
 
         View view = inflater.inflate(R.layout.fragment_eye, container, false);
         imageView = (ImageView) view.findViewById(R.id.imageView);
         imageView.setImageURI(mImageUri);
 
-//        if (imageView != null) {
-//            if (imageView.getDrawable() != null) {
-//                ((BitmapDrawable) imageView.getDrawable()).getBitmap().recycle();
-//            }
-//            imageView = (ImageView) view.findViewById(R.id.imageView);
-//            imageView.setImageURI(mImageUri);
-//        } else {
-//            imageView = (ImageView) view.findViewById(R.id.imageView);
-//            imageView.setImageURI(mImageUri);
-//        }
         mContainer = (RelativeLayout) view.findViewById(R.id.container);
         mImageFrame = (RelativeLayout) view.findViewById(R.id.imageFrame);
         instructionSlide = (RelativeLayout) view.findViewById(R.id.instructionSlide);
@@ -211,7 +208,7 @@ public class EyeFragment extends BaseFragment {
         if (item.getItemId() == R.id.add_eye) {
             addEye();
         } else if (item.getItemId() == R.id.delete_eye){
-            Optometrist.INSTANCE.removeEye(currentEye);
+//            Optometrist.INSTANCE.removeEye(currentEye);
             mImageFrame.removeView(currentEye);
             currentEye = null;
         } else if (item.getItemId() == R.id.next) {
@@ -245,6 +242,13 @@ public class EyeFragment extends BaseFragment {
 
         @Override
         public void onFocus(GooglyEyeWidget eye) {
+            for (GooglyEyeWidget i : mEyes) {
+                if (eye.equals(i)) {
+//                    i.setMode(GooglyEyeWidget.Mode.DRAGGING);
+                } else {
+                    i.setMode(GooglyEyeWidget.Mode.PLACED);
+                }
+            }
             currentEye = eye;
             isEyeHighlighted = true;
             getActivity().invalidateOptionsMenu();
@@ -259,37 +263,55 @@ public class EyeFragment extends BaseFragment {
     };
 
     private void addEye() {
-        currentEye = Optometrist.INSTANCE.makeEye(getActivity(), eyeListener);
+        //create new instance of eye
+        if (mEyes != null && !mEyes.isEmpty()) {
+            //get size of last eye
+            int eyeSize = mEyes.get(mEyes.size() - 1).getBoxWidth();
+            currentEye = new GooglyEyeWidget(mContext, eyeListener, eyeSize);
+        } else {
+            currentEye = new GooglyEyeWidget(mContext, eyeListener);
+        }
+        //add eye to list of eyes
+        mEyes.add(currentEye);
+        //overlay eye on image
         mImageFrame.addView(currentEye);
+        //give focus to this eye, take focus away from other eyes
+        for (GooglyEyeWidget eye : mEyes) {
+            if (eye.equals(currentEye)) {
+                eye.setMode(GooglyEyeWidget.Mode.EDITING);
+            } else {
+                eye.setMode(GooglyEyeWidget.Mode.PLACED);
+            }
+        }
         isEyeHighlighted = true;
         getActivity().invalidateOptionsMenu();
     }
 
     private void saveEyesToDb() {
-        List<GooglyEyeWidget> list = Optometrist.INSTANCE.getEyeList();
-        List<Eye> currentEyes = Eye.find(Eye.class, "filename = ?", filename);
-        for (Eye eye : currentEyes) {
-            eye.delete();
-        }
-        for (int i = 0; i < list.size(); i++) {
-            Eye eye = new Eye();
-            eye.eyeX = list.get(i).getBoxCornerX();
-            eye.eyeY = list.get(i).getBoxCornerY();
-            eye.eyeSize = list.get(i).getBoxWidth();
-            eye.uri = mImageUri.toString();
-            eye.filename = filename;
-            eye.save();
-        }
+//        List<GooglyEyeWidget> list = Optometrist.INSTANCE.getEyeList();
+//        List<Eye> currentEyes = Eye.find(Eye.class, "filename = ?", filename);
+//        for (Eye eye : currentEyes) {
+//            eye.delete();
+//        }
+//        for (int i = 0; i < list.size(); i++) {
+//            Eye eye = new Eye();
+//            eye.eyeX = list.get(i).getBoxCornerX();
+//            eye.eyeY = list.get(i).getBoxCornerY();
+//            eye.eyeSize = list.get(i).getBoxWidth();
+//            eye.uri = mImageUri.toString();
+//            eye.millis = mMillis;
+//            eye.save();
+//        }
     }
 
     private void addSavedEye(Eye eye) {
-        mImageFrame.addView(Optometrist.INSTANCE.makeEye(getActivity(), eyeListener, eye.eyeX, eye.eyeY, eye.eyeSize));
+//        mImageFrame.addView(Optometrist.INSTANCE.makeEye(getActivity(), eyeListener, eye.eyeX, eye.eyeY, eye.eyeSize));
     }
 
     private File saveImage() {
 
         //Unfocus any eyes
-        Optometrist.INSTANCE.removeFocusFromAll();
+//        Optometrist.INSTANCE.removeFocusFromAll();
 
         //Create filename
 
