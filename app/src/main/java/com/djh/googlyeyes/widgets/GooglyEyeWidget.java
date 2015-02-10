@@ -24,6 +24,7 @@ import android.widget.Toast;
 
 import com.djh.googlyeyes.R;
 import com.djh.googlyeyes.fragments.EyeFragment;
+import com.djh.googlyeyes.models.Eye;
 
 /**
  * Created by dillonhodapp on 7/30/14.
@@ -123,6 +124,17 @@ public class GooglyEyeWidget extends View implements SensorEventListener{
         units();
         init();
         boxWidth = nextSize;
+    }
+
+    public GooglyEyeWidget(Context context, Listener listener, Eye eye) {
+        super(context);
+        mContext = context;
+        mListener = listener;
+        units();
+        init();
+        boxWidth = eye.eyeSize;
+        boxCornerX = eye.eyeX;
+        boxCornerY = eye.eyeY;
     }
 
     public void setListener(Listener listener) {

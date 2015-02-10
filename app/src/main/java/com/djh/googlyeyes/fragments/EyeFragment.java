@@ -23,7 +23,6 @@ import com.djh.googlyeyes.R;
 import com.djh.googlyeyes.activities.MainActivity;
 import com.djh.googlyeyes.models.Eye;
 import com.djh.googlyeyes.widgets.GooglyEyeWidget;
-import com.djh.googlyeyes.widgets.Optometrist;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -108,8 +107,7 @@ public class EyeFragment extends BaseFragment {
         if (savedInstanceState != null) {
             mImageUri = Uri.parse(savedInstanceState.getString(KEY_URI));
             mMillis = savedInstanceState.getLong(KEY_MILLIS);
-//            savedEyes = Eye.find(Eye.class, "filename = ?", filename);
-//            Optometrist.INSTANCE.removeAllEyes();
+            savedEyes = Eye.find(Eye.class, "millis = ?", String.valueOf(mMillis));
         }
 
         View view = inflater.inflate(R.layout.fragment_eye, container, false);
@@ -208,7 +206,11 @@ public class EyeFragment extends BaseFragment {
         if (item.getItemId() == R.id.add_eye) {
             addEye();
         } else if (item.getItemId() == R.id.delete_eye){
-//            Optometrist.INSTANCE.removeEye(currentEye);
+            //delete highlighted eye from database. Note, if two eyes are stacked and exactly the same size it will delete both of them.
+            Eye.deleteAll(Eye.class, "millis = ? and eye_x = ? and eye_y = ? and eye_size = ?", String.valueOf(mMillis), String.valueOf(currentEye.getBoxCornerX()), String.valueOf(currentEye.getBoxCornerY()), String.valueOf(currentEye.getBoxWidth()));
+           //remove GooglyEye from list
+            mEyes.remove(currentEye);
+            //remove eye from screen
             mImageFrame.removeView(currentEye);
             currentEye = null;
         } else if (item.getItemId() == R.id.next) {
@@ -288,24 +290,19 @@ public class EyeFragment extends BaseFragment {
     }
 
     private void saveEyesToDb() {
-//        List<GooglyEyeWidget> list = Optometrist.INSTANCE.getEyeList();
-//        List<Eye> currentEyes = Eye.find(Eye.class, "filename = ?", filename);
-//        for (Eye eye : currentEyes) {
-//            eye.delete();
-//        }
-//        for (int i = 0; i < list.size(); i++) {
-//            Eye eye = new Eye();
-//            eye.eyeX = list.get(i).getBoxCornerX();
-//            eye.eyeY = list.get(i).getBoxCornerY();
-//            eye.eyeSize = list.get(i).getBoxWidth();
-//            eye.uri = mImageUri.toString();
-//            eye.millis = mMillis;
-//            eye.save();
-//        }
+        if (mEyes != null && !mEyes.isEmpty()) {
+            for (int i = 0; i < mEyes.size(); i++) {
+                Eye.deleteAll(Eye.class, "millis = ? and eye_x = ? and eye_y = ? and eye_size = ?", String.valueOf(mMillis), String.valueOf(currentEye.getBoxCornerX()), String.valueOf(currentEye.getBoxCornerY()), String.valueOf(currentEye.getBoxWidth()));
+                Eye eye = new Eye();
+                eye.bind(mEyes.get(i), mImageUri.toString(), mMillis);
+                eye.save();
+            }
+        }
     }
 
     private void addSavedEye(Eye eye) {
 //        mImageFrame.addView(Optometrist.INSTANCE.makeEye(getActivity(), eyeListener, eye.eyeX, eye.eyeY, eye.eyeSize));
+        mImageFrame.addView(new GooglyEyeWidget(mContext, eyeListener, eye));
     }
 
     private File saveImage() {
